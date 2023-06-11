@@ -1,0 +1,16 @@
+[package]
+name = "egui-plotter"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+egui = "0.22.0"
+emath = "0.22.0"
+epaint = "0.22.0"
+plotters-backend = "0.3.4"
+
+[dev-dependencies]
+eframe = "0.22.0"
+plotters = "0.3.1"
