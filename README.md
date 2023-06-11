@@ -15,9 +15,14 @@ project's `Cargo.toml`.
 egui-plotter = "0.1.0"
 ```
 
+**It is also heavily recommended you disable feathering in your egui context,
+as not only does it slow things down but it causes artifacts with certain plots.**
+
+See line 24 example below to see how to disable feathering.
+
 ## Examples
 
-Here's a simple plotter example being run on naitive eframe.
+Here's a simple plotter example being run on native eframe.
 Derived from
 [eframe](https://docs.rs/eframe/0.22.0/eframe/index.html#usage-native) and
 [plotters](https://docs.rs/plotters/0.3.4/plotters/index.html#quick-start).
@@ -37,8 +42,16 @@ struct MyEguiApp {}
 
 impl MyEguiApp {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        // Plotter examples are used to light mode
-        cc.egui_ctx.set_visuals(Visuals::light());
+       // Disable feathering as it causes artifacts
+       let context = &cc.egui_ctx;
+       
+       context.tessellation_options_mut(|tess_options| {
+           tess_options.feathering = false;
+       });
+
+       // Also enable light mode
+       context.set_visuals(Visuals::light());
+
         Self::default()
     }
 }

@@ -21,8 +21,16 @@ struct MyEguiApp {}
 
 impl MyEguiApp {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        // Plotter examples are used to light mode
-        cc.egui_ctx.set_visuals(Visuals::light());
+        // Disable feathering as it causes artifacts
+        let context = &cc.egui_ctx;
+        
+        context.tessellation_options_mut(|tess_options| {
+            tess_options.feathering = false;
+        });
+
+        // Also enable light mode
+        context.set_visuals(Visuals::light());
+
         Self::default()
     }
 }
