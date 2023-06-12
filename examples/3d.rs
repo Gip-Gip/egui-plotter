@@ -6,6 +6,9 @@ use eframe::egui::{self, CentralPanel, Visuals};
 use egui_plotter::EguiBackend;
 use plotters::prelude::*;
 
+const MOVE_SCALE: f32 = 0.01;
+const SCROLL_SCALE: f32 = 0.001;
+
 fn main() {
     let native_options = eframe::NativeOptions::default();
     eframe::run_native(
@@ -17,7 +20,11 @@ fn main() {
 }
 
 #[derive(Default)]
-struct MyEguiApp {}
+struct MyEguiApp {
+    chart_pitch: f32,
+    chart_yaw: f32,
+    chart_scale: f32,
+}
 
 impl MyEguiApp {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
@@ -31,13 +38,37 @@ impl MyEguiApp {
         // Also enable light mode
         context.set_visuals(Visuals::light());
 
-        Self::default()
+        Self {
+            chart_pitch: 0.3,
+            chart_yaw: 0.9,
+            chart_scale: 0.9,
+        }
     }
 }
 
 impl eframe::App for MyEguiApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         CentralPanel::default().show(ctx, |ui| {
+            // First, get mouse data
+            let (pitch_delta, yaw_delta, scale_delta) = ui.input(|input| {
+                let pointer = &input.pointer;
+                let delta = pointer.delta();
+
+                let (pitch_delta, yaw_delta) = match pointer.primary_down() {
+                    true => (delta.y * MOVE_SCALE, -delta.x * MOVE_SCALE),
+                    false => (0.0, 0.0),
+                };
+
+                let scale_delta = input.scroll_delta.y * SCROLL_SCALE;
+
+                (pitch_delta, yaw_delta, scale_delta)
+            });
+
+            self.chart_pitch += pitch_delta;
+            self.chart_yaw += yaw_delta;
+            self.chart_scale += scale_delta;
+
+            // Next plot everything
             let root = EguiBackend::new(ui).into_drawing_area();
 
             root.fill(&WHITE).unwrap();
@@ -51,8 +82,9 @@ impl eframe::App for MyEguiApp {
                 .unwrap();
 
             chart.with_projection(|mut pb| {
-                pb.yaw = 0.5;
-                pb.scale = 0.9;
+                pb.yaw = self.chart_yaw as f64;
+                pb.pitch = self.chart_pitch as f64;
+                pb.scale = self.chart_scale as f64;
                 pb.into_matrix()
             });
 
