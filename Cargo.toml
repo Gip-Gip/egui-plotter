@@ -9,6 +9,9 @@ keywords = ["plotters", "plotter", "egui", "backend"]
 catagories = ["graphics", "gui", "mathematics", "rendering", "visualizatoin"]
 description = "Simple to use utilties for integrating plotter into egui"
 repository = "https://github.com/Gip-Gip/egui-plotter"
+exclude = [
+    "images"
+]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
