@@ -2,6 +2,8 @@
 //! [eframe](https://docs.rs/eframe/0.22.0/eframe/index.html#usage-native) and
 //! [plotters](https://github.com/plotters-rs/plotters/blob/master/plotters/examples/3d-plot.rs)
 
+use std::time::Duration;
+
 use eframe::egui::{self, CentralPanel, Visuals};
 use egui_plotter::EguiBackend;
 use plotters::prelude::*;
@@ -24,6 +26,8 @@ struct MyEguiApp {
     chart_pitch: f32,
     chart_yaw: f32,
     chart_scale: f32,
+    chart_pitch_vel: f32,
+    chart_yaw_vel: f32,
 }
 
 impl MyEguiApp {
@@ -42,6 +46,8 @@ impl MyEguiApp {
             chart_pitch: 0.3,
             chart_yaw: 0.9,
             chart_scale: 0.9,
+            chart_pitch_vel: 0.0,
+            chart_yaw_vel: 0.0,
         }
     }
 }
@@ -56,7 +62,7 @@ impl eframe::App for MyEguiApp {
 
                 let (pitch_delta, yaw_delta) = match pointer.primary_down() {
                     true => (delta.y * MOVE_SCALE, -delta.x * MOVE_SCALE),
-                    false => (0.0, 0.0),
+                    false => (self.chart_pitch_vel, self.chart_yaw_vel),
                 };
 
                 let scale_delta = input.scroll_delta.y * SCROLL_SCALE;
@@ -64,8 +70,11 @@ impl eframe::App for MyEguiApp {
                 (pitch_delta, yaw_delta, scale_delta)
             });
 
-            self.chart_pitch += pitch_delta;
-            self.chart_yaw += yaw_delta;
+            self.chart_pitch_vel = pitch_delta;
+            self.chart_yaw_vel = yaw_delta;
+
+            self.chart_pitch += self.chart_pitch_vel;
+            self.chart_yaw += self.chart_yaw_vel;
             self.chart_scale += scale_delta;
 
             // Next plot everything
@@ -130,5 +139,8 @@ impl eframe::App for MyEguiApp {
             // To avoid the IO failure being ignored silently, we manually call the present function
             root.present().unwrap();
         });
+
+        std::thread::sleep(Duration::from_millis(10));
+        ctx.request_repaint();
     }
 }
