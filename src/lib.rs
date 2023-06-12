@@ -4,6 +4,8 @@
 //! [![APE](https://img.shields.io/badge/-APE-%2359118e)](https://openapeshop.org/)
 //! ## *simple to use utilties for integrating plotter into egui*
 //!
+//! ![3d Graph Live Demo](https://github.com/Gip-Gip/egui-plotter/blob/91a86d3dfcd8f4f1207284030edcb637b2edc973/images/3d.gif?raw=true)
+//!
 //! ## Usage
 //!
 //! This crate can be used by adding `egui-plotter` to the dependencies in your

@@ -140,6 +140,7 @@ impl eframe::App for MyEguiApp {
             root.present().unwrap();
         });
 
+        // Limit framerate to 100fps
         std::thread::sleep(Duration::from_millis(10));
         ctx.request_repaint();
     }
