@@ -141,12 +141,29 @@ impl Into<Color32> for EguiBackendColor {
 /// use.
 pub struct EguiBackend<'a> {
     ui: &'a Ui,
+    x: i32,
+    y: i32,
 }
 
 impl<'a> EguiBackend<'a> {
     #[inline]
+    /// Create a backend given a reference to a Ui.
     pub fn new(ui: &'a Ui) -> Self {
-        Self { ui }
+        Self { ui, x: 0, y: 0 }
+    }
+
+    #[inline]
+    /// Set the offset(x + y) of the backend.
+    pub fn set_offset(&mut self, offset: (i32, i32)) {
+        (self.x, self.y) = offset
+    }
+
+    #[inline]
+    /// Set the offset(x + y) of the backend. Consumes self.
+    pub fn offset(mut self, offset: (i32, i32)) -> Self {
+        self.set_offset(offset);
+
+        self
     }
 }
 
@@ -172,9 +189,10 @@ impl<'a> DrawingBackend for EguiBackend<'a> {
         color: BackendColor,
     ) -> Result<(), DrawingErrorKind<Self::ErrorType>> {
         let bounds = self.ui.max_rect();
-        let painter = self.ui.painter();
+        let painter = self.ui.painter().with_clip_rect(bounds);
 
-        let p0 = EguiBackendCoord::from(point) + bounds.min;
+        let p0 =
+            EguiBackendCoord::from((self.x, self.y)) + EguiBackendCoord::from(point) + bounds.min;
 
         let p1 = p0 + 1.0;
 
@@ -194,10 +212,11 @@ impl<'a> DrawingBackend for EguiBackend<'a> {
         style: &S,
     ) -> Result<(), DrawingErrorKind<Self::ErrorType>> {
         let bounds = self.ui.max_rect();
-        let painter = self.ui.painter();
+        let painter = self.ui.painter().with_clip_rect(bounds);
 
-        let p0 = EguiBackendCoord::from(from) + bounds.min;
-        let p1 = EguiBackendCoord::from(to) + bounds.min;
+        let p0 =
+            EguiBackendCoord::from((self.x, self.y)) + EguiBackendCoord::from(from) + bounds.min;
+        let p1 = EguiBackendCoord::from((self.x, self.y)) + EguiBackendCoord::from(to) + bounds.min;
 
         let color: Color32 = EguiBackendColor::from(style.color()).into();
 
@@ -215,9 +234,10 @@ impl<'a> DrawingBackend for EguiBackend<'a> {
         pos: (i32, i32),
     ) -> Result<(), DrawingErrorKind<Self::ErrorType>> {
         let bounds = self.ui.max_rect();
-        let painter = self.ui.painter();
+        let painter = self.ui.painter().with_clip_rect(bounds);
 
-        let pos = EguiBackendCoord::from(pos) + bounds.min;
+        let pos =
+            EguiBackendCoord::from((self.x, self.y)) + EguiBackendCoord::from(pos) + bounds.min;
 
         let font_size = style.size() as f32;
         let font_family = match style.family() {
@@ -246,12 +266,14 @@ impl<'a> DrawingBackend for EguiBackend<'a> {
         style: &S,
     ) -> Result<(), DrawingErrorKind<Self::ErrorType>> {
         let bounds = self.ui.max_rect();
-        let painter = self.ui.painter();
+        let painter = self.ui.painter().with_clip_rect(bounds);
 
         let points: Vec<Pos2> = path
             .into_iter()
             .map(|point| {
-                let point = EguiBackendCoord::from(point) + bounds.min;
+                let point = EguiBackendCoord::from((self.x, self.y))
+                    + EguiBackendCoord::from(point)
+                    + bounds.min;
 
                 point.into()
             })
@@ -273,12 +295,14 @@ impl<'a> DrawingBackend for EguiBackend<'a> {
         style: &S,
     ) -> Result<(), DrawingErrorKind<Self::ErrorType>> {
         let bounds = self.ui.max_rect();
-        let painter = self.ui.painter();
+        let painter = self.ui.painter().with_clip_rect(bounds);
 
         let points: Vec<Pos2> = vert
             .into_iter()
             .map(|point| {
-                let point = EguiBackendCoord::from(point) + bounds.min;
+                let point = EguiBackendCoord::from((self.x, self.y))
+                    + EguiBackendCoord::from(point)
+                    + bounds.min;
 
                 point.into()
             })

@@ -1,12 +1,12 @@
 [package]
 name = "egui-plotter"
-version = "0.1.1"
+version = "0.2.0"
 edition = "2021"
 authors = ["Charles Thompson"]
 license = "MIT"
 readme = "README.md"
 keywords = ["plotters", "plotter", "egui", "backend"]
-catagories = ["graphics", "gui", "mathematics", "rendering", "visualizatoin"]
+catagories = ["graphics", "gui", "mathematics", "rendering", "visualization"]
 description = "Simple to use utilties for integrating plotter into egui"
 repository = "https://github.com/Gip-Gip/egui-plotter"
 exclude = [

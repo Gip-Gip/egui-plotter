@@ -5,11 +5,8 @@
 use std::time::Duration;
 
 use eframe::egui::{self, CentralPanel, Visuals};
-use egui_plotter::{Chart3d, EguiBackend};
+use egui_plotter::Chart3d;
 use plotters::prelude::*;
-
-const MOVE_SCALE: f32 = 0.01;
-const SCROLL_SCALE: f32 = 0.001;
 
 fn main() {
     let native_options = eframe::NativeOptions::default();
@@ -37,67 +34,66 @@ impl MyEguiApp {
         // Also enable light mode
         context.set_visuals(Visuals::light());
 
-        let chart =
-            Chart3d::new()
-                .mouse(true)
-                .builder_cb(Box::new(|mut chart_builder, transform| {
-                    let x_axis = (-3.0..3.0).step(0.1);
-                    let z_axis = (-3.0..3.0).step(0.1);
+        let chart = Chart3d::new()
+            .mouse(true)
+            .pitch(0.7)
+            .yaw(0.7)
+            .scale(0.7)
+            .builder_cb(Box::new(|mut chart_builder, transform| {
+                let x_axis = (-3.0..3.0).step(0.1);
+                let z_axis = (-3.0..3.0).step(0.1);
 
-                    let mut chart = chart_builder
-                        .caption(format!("3D Plot Test"), (FontFamily::SansSerif, 20))
-                        .build_cartesian_3d(x_axis.clone(), -3.0..3.0, z_axis.clone())
-                        .unwrap();
+                let mut chart = chart_builder
+                    .caption(format!("3D Plot Test"), (FontFamily::SansSerif, 20))
+                    .build_cartesian_3d(x_axis.clone(), -3.0..3.0, z_axis.clone())
+                    .unwrap();
 
-                    chart.with_projection(|mut pb| {
-                        pb.yaw = transform.yaw;
-                        pb.pitch = transform.pitch;
-                        pb.scale = transform.scale;
-                        pb.into_matrix()
+                chart.with_projection(|mut pb| {
+                    pb.yaw = transform.yaw;
+                    pb.pitch = transform.pitch;
+                    pb.scale = transform.scale;
+                    pb.into_matrix()
+                });
+
+                chart
+                    .configure_axes()
+                    .light_grid_style(BLACK.mix(0.15))
+                    .max_light_lines(3)
+                    .draw()
+                    .unwrap();
+
+                chart
+                    .draw_series(
+                        SurfaceSeries::xoz(
+                            (-30..30).map(|f| f as f64 / 10.0),
+                            (-30..30).map(|f| f as f64 / 10.0),
+                            |x, z| (x * x + z * z).cos(),
+                        )
+                        .style(BLUE.mix(0.2).filled()),
+                    )
+                    .unwrap()
+                    .label("Surface")
+                    .legend(|(x, y)| {
+                        Rectangle::new([(x + 5, y - 5), (x + 15, y + 5)], BLUE.mix(0.5).filled())
                     });
 
-                    chart
-                        .configure_axes()
-                        .light_grid_style(BLACK.mix(0.15))
-                        .max_light_lines(3)
-                        .draw()
-                        .unwrap();
+                chart
+                    .draw_series(LineSeries::new(
+                        (-100..100)
+                            .map(|y| y as f64 / 40.0)
+                            .map(|y| ((y * 10.0).sin(), y, (y * 10.0).cos())),
+                        &BLACK,
+                    ))
+                    .unwrap()
+                    .label("Line")
+                    .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &BLACK));
 
-                    chart
-                        .draw_series(
-                            SurfaceSeries::xoz(
-                                (-30..30).map(|f| f as f64 / 10.0),
-                                (-30..30).map(|f| f as f64 / 10.0),
-                                |x, z| (x * x + z * z).cos(),
-                            )
-                            .style(BLUE.mix(0.2).filled()),
-                        )
-                        .unwrap()
-                        .label("Surface")
-                        .legend(|(x, y)| {
-                            Rectangle::new(
-                                [(x + 5, y - 5), (x + 15, y + 5)],
-                                BLUE.mix(0.5).filled(),
-                            )
-                        });
-
-                    chart
-                        .draw_series(LineSeries::new(
-                            (-100..100)
-                                .map(|y| y as f64 / 40.0)
-                                .map(|y| ((y * 10.0).sin(), y, (y * 10.0).cos())),
-                            &BLACK,
-                        ))
-                        .unwrap()
-                        .label("Line")
-                        .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &BLACK));
-
-                    chart
-                        .configure_series_labels()
-                        .border_style(&BLACK)
-                        .draw()
-                        .unwrap();
-                }));
+                chart
+                    .configure_series_labels()
+                    .border_style(&BLACK)
+                    .draw()
+                    .unwrap();
+            }));
 
         Self { chart }
     }
@@ -106,7 +102,6 @@ impl MyEguiApp {
 impl eframe::App for MyEguiApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         CentralPanel::default().show(ctx, |ui| {
-            // Next plot everything
             self.chart.draw(ui);
         });
 
