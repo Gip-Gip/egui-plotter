@@ -3,20 +3,23 @@
 use egui::Ui;
 use plotters::prelude::{ChartBuilder, ChartContext, IntoDrawingArea};
 
-use crate::EguiBackend;
+use crate::{EguiBackend, EguiBackendError};
 
-const MOVE_SCALE: f32 = 0.01;
-const SCROLL_SCALE: f32 = 0.001;
+const DEFAULT_MOVE_SCALE: f32 = 0.01;
+const DEFAULT_SCROLL_SCALE: f32 = 0.001;
 
-pub struct Chart3d {
-    transform: Transform3d,
+pub struct Chart {
+    transform: Transform,
     mouse: bool,
-    builder_cb: Option<Box<dyn FnMut(ChartBuilder<EguiBackend>, &Transform3d)>>,
+    mouse_x_scale: f32,
+    mouse_y_scale: f32,
+    mouse_scroll_scale: f32,
+    builder_cb: Option<Box<dyn FnMut(ChartBuilder<EguiBackend>, &Transform)>>,
 }
 
 #[derive(Debug, Default, Copy, Clone)]
-/// Struct used to apply transformations to 3d charts
-pub struct Transform3d {
+/// Struct used to apply transformations to charts
+pub struct Transform {
     pub pitch: f64,
     pub yaw: f64,
     pub scale: f64,
@@ -24,12 +27,15 @@ pub struct Transform3d {
     pub y: i32,
 }
 
-impl Chart3d {
+impl Chart {
     /// Create a new 3d chart with default settings.
     pub fn new() -> Self {
         Self {
-            transform: Transform3d::default(),
+            transform: Transform::default(),
             mouse: false,
+            mouse_x_scale: DEFAULT_MOVE_SCALE,
+            mouse_y_scale: DEFAULT_MOVE_SCALE,
+            mouse_scroll_scale: DEFAULT_SCROLL_SCALE,
             builder_cb: None,
         }
     }
@@ -52,7 +58,7 @@ impl Chart3d {
     /// Set the builder callback
     pub fn set_builder_cb(
         &mut self,
-        builder_cb: Box<dyn FnMut(ChartBuilder<EguiBackend>, &Transform3d)>,
+        builder_cb: Box<dyn FnMut(ChartBuilder<EguiBackend>, &Transform)>,
     ) {
         self.builder_cb = Some(builder_cb)
     }
@@ -61,7 +67,7 @@ impl Chart3d {
     /// Set the builder callback. Consumes self.
     pub fn builder_cb(
         mut self,
-        builder_cb: Box<dyn FnMut(ChartBuilder<EguiBackend>, &Transform3d)>,
+        builder_cb: Box<dyn FnMut(ChartBuilder<EguiBackend>, &Transform)>,
     ) -> Self {
         self.set_builder_cb(builder_cb);
 
@@ -122,8 +128,8 @@ impl Chart3d {
 
                 // Adjust the pitch/yaw if the primary button is pressed
                 if pointer.middle_down() {
-                    let pitch_delta = delta.y * MOVE_SCALE;
-                    let yaw_delta = delta.x * MOVE_SCALE;
+                    let pitch_delta = delta.y * self.mouse_y_scale;
+                    let yaw_delta = delta.x * self.mouse_x_scale;
 
                     transform.pitch += pitch_delta as f64;
                     transform.yaw += -yaw_delta as f64;
@@ -138,7 +144,7 @@ impl Chart3d {
                     transform.y += y_delta as i32;
                 }
 
-                let scale_delta = input.scroll_delta.y * SCROLL_SCALE;
+                let scale_delta = input.scroll_delta.y * self.mouse_scroll_scale;
 
                 transform.scale += scale_delta as f64;
             });
@@ -146,6 +152,7 @@ impl Chart3d {
 
         let backend = EguiBackend::new(ui)
             .offset((transform.x, transform.y))
+            .scale(transform.scale as f32)
             .into_drawing_area();
 
         let chart = ChartBuilder::on(&backend);

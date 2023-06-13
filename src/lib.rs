@@ -95,4 +95,4 @@ mod backend;
 mod charts;
 
 pub use backend::{EguiBackend, EguiBackendError};
-pub use charts::{Chart3d, Transform3d};
+pub use charts::{Chart, Transform};

@@ -1,9 +1,9 @@
 use std::error::Error as ErrorTrait;
 use std::fmt::{Display, Formatter, Result as FmtResult};
-use std::ops::Add;
+use std::ops::{Add, AddAssign, MulAssign, Sub, SubAssign};
 
 use egui::{FontFamily as EguiFontFamily, Ui};
-use emath::Align2;
+use emath::{Align2, Rect};
 use epaint::{Color32, FontId, PathShape, Pos2, Stroke};
 use plotters_backend::{
     BackendColor, BackendCoord, BackendStyle, BackendTextStyle, DrawingBackend, DrawingErrorKind,
@@ -68,6 +68,16 @@ impl Into<(u32, u32)> for EguiBackendCoord {
     }
 }
 
+impl From<Pos2> for EguiBackendCoord {
+    #[inline]
+    fn from(value: Pos2) -> Self {
+        Self {
+            x: value.x,
+            y: value.y,
+        }
+    }
+}
+
 impl Add<EguiBackendCoord> for EguiBackendCoord {
     type Output = EguiBackendCoord;
 
@@ -79,6 +89,20 @@ impl Add<EguiBackendCoord> for EguiBackendCoord {
         };
 
         sum
+    }
+}
+
+impl Sub<EguiBackendCoord> for EguiBackendCoord {
+    type Output = EguiBackendCoord;
+
+    #[inline]
+    fn sub(self, rhs: EguiBackendCoord) -> Self::Output {
+        let diff = Self {
+            x: self.x - rhs.x,
+            y: self.y - rhs.y,
+        };
+
+        diff
     }
 }
 
@@ -107,6 +131,27 @@ impl Add<f32> for EguiBackendCoord {
         };
 
         sum
+    }
+}
+
+impl AddAssign<EguiBackendCoord> for EguiBackendCoord {
+    fn add_assign(&mut self, rhs: EguiBackendCoord) {
+        self.x += rhs.x;
+        self.y += rhs.y;
+    }
+}
+
+impl SubAssign<EguiBackendCoord> for EguiBackendCoord {
+    fn sub_assign(&mut self, rhs: EguiBackendCoord) {
+        self.x -= rhs.x;
+        self.y -= rhs.y;
+    }
+}
+
+impl MulAssign<f32> for EguiBackendCoord {
+    fn mul_assign(&mut self, rhs: f32) {
+        self.x *= rhs;
+        self.y *= rhs;
     }
 }
 
@@ -143,15 +188,34 @@ pub struct EguiBackend<'a> {
     ui: &'a Ui,
     x: i32,
     y: i32,
+    scale: f32,
 }
 
 impl<'a> EguiBackend<'a> {
     #[inline]
     /// Create a backend given a reference to a Ui.
     pub fn new(ui: &'a Ui) -> Self {
-        Self { ui, x: 0, y: 0 }
+        Self {
+            ui,
+            x: 0,
+            y: 0,
+            scale: 1.0,
+        }
     }
 
+    #[inline]
+    /// Transform point
+    fn point_transform(&self, mut point: EguiBackendCoord, bounds: Rect) -> EguiBackendCoord {
+        let center = EguiBackendCoord::from(bounds.center()) - EguiBackendCoord::from(bounds.min);
+        point -= center;
+        point *= self.scale;
+        point += center;
+
+        point += EguiBackendCoord::from((self.x, self.y));
+        point += EguiBackendCoord::from(bounds.min);
+
+        point
+    }
     #[inline]
     /// Set the offset(x + y) of the backend.
     pub fn set_offset(&mut self, offset: (i32, i32)) {
@@ -162,6 +226,20 @@ impl<'a> EguiBackend<'a> {
     /// Set the offset(x + y) of the backend. Consumes self.
     pub fn offset(mut self, offset: (i32, i32)) -> Self {
         self.set_offset(offset);
+
+        self
+    }
+
+    #[inline]
+    /// Set the scale of the backend.
+    pub fn set_scale(&mut self, scale: f32) {
+        self.scale = scale
+    }
+
+    #[inline]
+    /// Set the scale of the backend. Consume self.
+    pub fn scale(mut self, scale: f32) -> Self {
+        self.set_scale(scale);
 
         self
     }
@@ -191,8 +269,7 @@ impl<'a> DrawingBackend for EguiBackend<'a> {
         let bounds = self.ui.max_rect();
         let painter = self.ui.painter().with_clip_rect(bounds);
 
-        let p0 =
-            EguiBackendCoord::from((self.x, self.y)) + EguiBackendCoord::from(point) + bounds.min;
+        let p0 = self.point_transform(EguiBackendCoord::from(point), bounds);
 
         let p1 = p0 + 1.0;
 
@@ -214,9 +291,8 @@ impl<'a> DrawingBackend for EguiBackend<'a> {
         let bounds = self.ui.max_rect();
         let painter = self.ui.painter().with_clip_rect(bounds);
 
-        let p0 =
-            EguiBackendCoord::from((self.x, self.y)) + EguiBackendCoord::from(from) + bounds.min;
-        let p1 = EguiBackendCoord::from((self.x, self.y)) + EguiBackendCoord::from(to) + bounds.min;
+        let p0 = self.point_transform(EguiBackendCoord::from(from), bounds);
+        let p1 = self.point_transform(EguiBackendCoord::from(to), bounds);
 
         let color: Color32 = EguiBackendColor::from(style.color()).into();
 
@@ -236,8 +312,7 @@ impl<'a> DrawingBackend for EguiBackend<'a> {
         let bounds = self.ui.max_rect();
         let painter = self.ui.painter().with_clip_rect(bounds);
 
-        let pos =
-            EguiBackendCoord::from((self.x, self.y)) + EguiBackendCoord::from(pos) + bounds.min;
+        let pos = self.point_transform(EguiBackendCoord::from(pos), bounds);
 
         let font_size = style.size() as f32;
         let font_family = match style.family() {
@@ -271,9 +346,7 @@ impl<'a> DrawingBackend for EguiBackend<'a> {
         let points: Vec<Pos2> = path
             .into_iter()
             .map(|point| {
-                let point = EguiBackendCoord::from((self.x, self.y))
-                    + EguiBackendCoord::from(point)
-                    + bounds.min;
+                let point = self.point_transform(EguiBackendCoord::from(point), bounds);
 
                 point.into()
             })
@@ -300,9 +373,7 @@ impl<'a> DrawingBackend for EguiBackend<'a> {
         let points: Vec<Pos2> = vert
             .into_iter()
             .map(|point| {
-                let point = EguiBackendCoord::from((self.x, self.y))
-                    + EguiBackendCoord::from(point)
-                    + bounds.min;
+                let point = self.point_transform(EguiBackendCoord::from(point), bounds);
 
                 point.into()
             })

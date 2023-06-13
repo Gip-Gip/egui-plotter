@@ -5,7 +5,7 @@
 use std::time::Duration;
 
 use eframe::egui::{self, CentralPanel, Visuals};
-use egui_plotter::Chart3d;
+use egui_plotter::Chart;
 use plotters::prelude::*;
 
 fn main() {
@@ -19,7 +19,7 @@ fn main() {
 }
 
 struct MyEguiApp {
-    chart: Chart3d,
+    chart: Chart,
 }
 
 impl MyEguiApp {
@@ -34,11 +34,11 @@ impl MyEguiApp {
         // Also enable light mode
         context.set_visuals(Visuals::light());
 
-        let chart = Chart3d::new()
+        let chart = Chart::new()
             .mouse(true)
             .pitch(0.7)
             .yaw(0.7)
-            .scale(0.7)
+            .scale(1.0)
             .builder_cb(Box::new(|mut chart_builder, transform| {
                 let x_axis = (-3.0..3.0).step(0.1);
                 let z_axis = (-3.0..3.0).step(0.1);
@@ -51,7 +51,7 @@ impl MyEguiApp {
                 chart.with_projection(|mut pb| {
                     pb.yaw = transform.yaw;
                     pb.pitch = transform.pitch;
-                    pb.scale = transform.scale;
+                    pb.scale = 0.5;
                     pb.into_matrix()
                 });
 
