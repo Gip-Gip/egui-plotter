@@ -1,5 +1,7 @@
 //! Structs used to simplify the process of making interactive charts
 
+use std::any::Any;
+
 use egui::Ui;
 use plotters::prelude::{ChartBuilder, ChartContext, IntoDrawingArea};
 
@@ -14,10 +16,12 @@ pub struct Chart {
     mouse_x_scale: f32,
     mouse_y_scale: f32,
     mouse_scroll_scale: f32,
-    builder_cb: Option<Box<dyn FnMut(ChartBuilder<EguiBackend>, &Transform)>>,
+    builder_cb:
+        Option<Box<dyn FnMut(ChartBuilder<EguiBackend>, &Transform, &Option<Box<dyn Any>>)>>,
+    data: Option<Box<dyn Any>>,
 }
 
-#[derive(Debug, Default, Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 /// Struct used to apply transformations to charts
 pub struct Transform {
     pub pitch: f64,
@@ -25,6 +29,18 @@ pub struct Transform {
     pub scale: f64,
     pub x: i32,
     pub y: i32,
+}
+
+impl Default for Transform {
+    fn default() -> Self {
+        Self {
+            pitch: 0.0,
+            yaw: 0.0,
+            scale: 1.0,
+            x: 0,
+            y: 0,
+        }
+    }
 }
 
 impl Chart {
@@ -37,6 +53,7 @@ impl Chart {
             mouse_y_scale: DEFAULT_MOVE_SCALE,
             mouse_scroll_scale: DEFAULT_SCROLL_SCALE,
             builder_cb: None,
+            data: None,
         }
     }
 
@@ -58,7 +75,7 @@ impl Chart {
     /// Set the builder callback
     pub fn set_builder_cb(
         &mut self,
-        builder_cb: Box<dyn FnMut(ChartBuilder<EguiBackend>, &Transform)>,
+        builder_cb: Box<dyn FnMut(ChartBuilder<EguiBackend>, &Transform, &Option<Box<dyn Any>>)>,
     ) {
         self.builder_cb = Some(builder_cb)
     }
@@ -67,7 +84,7 @@ impl Chart {
     /// Set the builder callback. Consumes self.
     pub fn builder_cb(
         mut self,
-        builder_cb: Box<dyn FnMut(ChartBuilder<EguiBackend>, &Transform)>,
+        builder_cb: Box<dyn FnMut(ChartBuilder<EguiBackend>, &Transform, &Option<Box<dyn Any>>)>,
     ) -> Self {
         self.set_builder_cb(builder_cb);
 
@@ -116,6 +133,20 @@ impl Chart {
         self
     }
 
+    #[inline]
+    /// Set the data of the chart.
+    pub fn set_data(&mut self, data: Box<dyn Any>) {
+        self.data = Some(data)
+    }
+
+    #[inline]
+    /// Set the data of the chart. Consumes self.
+    pub fn data(mut self, data: Box<dyn Any>) -> Self {
+        self.set_data(data);
+
+        self
+    }
+
     /// Draw the chart to a UI element
     pub fn draw(&mut self, ui: &Ui) {
         let transform = &mut self.transform;
@@ -127,7 +158,7 @@ impl Chart {
                 let delta = pointer.delta();
 
                 // Adjust the pitch/yaw if the primary button is pressed
-                if pointer.middle_down() {
+                if pointer.primary_down() {
                     let pitch_delta = delta.y * self.mouse_y_scale;
                     let yaw_delta = delta.x * self.mouse_x_scale;
 
@@ -136,7 +167,7 @@ impl Chart {
                 }
 
                 // Adjust the x/y if the middle button is down
-                if pointer.primary_down() {
+                if pointer.middle_down() {
                     let x_delta = delta.x;
                     let y_delta = delta.y;
 
@@ -146,7 +177,8 @@ impl Chart {
 
                 let scale_delta = input.scroll_delta.y * self.mouse_scroll_scale;
 
-                transform.scale += scale_delta as f64;
+                // !TODO! make scaling exponential
+                transform.scale = (transform.scale + scale_delta as f64).abs();
             });
         }
 
@@ -159,7 +191,7 @@ impl Chart {
 
         match &mut self.builder_cb {
             Some(cb) => {
-                cb(chart, transform);
+                cb(chart, transform, &self.data);
             }
 
             None => {}

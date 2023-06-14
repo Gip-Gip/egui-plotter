@@ -39,7 +39,7 @@ impl MyEguiApp {
             .pitch(0.7)
             .yaw(0.7)
             .scale(1.0)
-            .builder_cb(Box::new(|mut chart_builder, transform| {
+            .builder_cb(Box::new(|mut chart_builder, transform, _d| {
                 let x_axis = (-3.0..3.0).step(0.1);
                 let z_axis = (-3.0..3.0).step(0.1);
 
