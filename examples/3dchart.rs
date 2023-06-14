@@ -5,7 +5,7 @@
 use std::time::Duration;
 
 use eframe::egui::{self, CentralPanel, Visuals};
-use egui_plotter::Chart;
+use egui_plotter::{Chart, MouseConfig};
 use plotters::prelude::*;
 
 fn main() {
@@ -35,7 +35,7 @@ impl MyEguiApp {
         context.set_visuals(Visuals::light());
 
         let chart = Chart::new()
-            .mouse(true)
+            .mouse(MouseConfig::default().enable_all())
             .pitch(0.7)
             .yaw(0.7)
             .scale(1.0)

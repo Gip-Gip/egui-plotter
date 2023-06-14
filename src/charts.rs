@@ -2,24 +2,13 @@
 
 use std::any::Any;
 
-use egui::Ui;
-use plotters::prelude::{ChartBuilder, ChartContext, IntoDrawingArea};
+use egui::{PointerState, Ui};
+use plotters::prelude::{ChartBuilder, IntoDrawingArea};
 
-use crate::{EguiBackend, EguiBackendError};
+use crate::EguiBackend;
 
-const DEFAULT_MOVE_SCALE: f32 = 0.01;
-const DEFAULT_SCROLL_SCALE: f32 = 0.001;
-
-pub struct Chart {
-    transform: Transform,
-    mouse: bool,
-    mouse_x_scale: f32,
-    mouse_y_scale: f32,
-    mouse_scroll_scale: f32,
-    builder_cb:
-        Option<Box<dyn FnMut(ChartBuilder<EguiBackend>, &Transform, &Option<Box<dyn Any>>)>>,
-    data: Option<Box<dyn Any>>,
-}
+pub const DEFAULT_MOVE_SCALE: f32 = 0.01;
+pub const DEFAULT_SCROLL_SCALE: f32 = 0.001;
 
 #[derive(Debug, Copy, Clone)]
 /// Struct used to apply transformations to charts
@@ -29,6 +18,122 @@ pub struct Transform {
     pub scale: f64,
     pub x: i32,
     pub y: i32,
+}
+
+#[derive(Debug, Copy, Clone)]
+/// Mouse buttons that can be bound to chart actions
+pub enum MouseButton {
+    Primary,
+    Middle,
+    Secondary,
+}
+
+impl MouseButton {
+    pub fn is_down(&self, pointer: &PointerState) -> bool {
+        match self {
+            Self::Primary => pointer.primary_down(),
+            Self::Middle => pointer.middle_down(),
+            Self::Secondary => pointer.secondary_down(),
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
+/// Used to configure how the mouse interacts with the chart.
+///
+/// ## Usage
+/// MouseConfig allows you to change the ways the user interacts with your chart in the following
+/// ways:
+///  * `drag`, `rotate`, & `zoom` - You can enable dragging, rotating, and zooming your plots
+///  * `pitch_scale` & `yaw_scale` - Modifies how quick the pitch and yaw is altered when rotating with the
+///  mouse.
+///  * `zoom_scale` - Modifies how quick you zoom in/out
+///  * `drag_bind` - Mouse button bound to dragging your plot
+///  * `rotate_bind` - Mouse button bound to rotating your plot
+pub struct MouseConfig {
+    drag: bool,
+    rotate: bool,
+    zoom: bool,
+    x_scale: f32,
+    y_scale: f32,
+    zoom_scale: f32,
+    drag_bind: MouseButton,
+    rotate_bind: MouseButton,
+}
+
+impl Default for MouseConfig {
+    fn default() -> Self {
+        Self {
+            drag: false,
+            rotate: false,
+            zoom: false,
+            x_scale: DEFAULT_MOVE_SCALE,
+            y_scale: DEFAULT_MOVE_SCALE,
+            zoom_scale: DEFAULT_SCROLL_SCALE,
+            drag_bind: MouseButton::Middle,
+            rotate_bind: MouseButton::Primary,
+        }
+    }
+}
+
+impl MouseConfig {
+    #[inline]
+    /// Enable dragging, rotation, and zoom of the chart.
+    fn set_enable_all(&mut self) {
+        self.set_drag(true);
+        self.set_zoom(true);
+        self.set_rotate(true);
+    }
+
+    #[inline]
+    /// Enable dragging, rotation, and zoom of the chart. Consumes self.
+    pub fn enable_all(mut self) -> Self {
+        self.set_enable_all();
+
+        self
+    }
+
+    #[inline]
+    /// Enable/disable dragging of the chart.
+    pub fn set_drag(&mut self, drag: bool) {
+        self.drag = drag
+    }
+
+    #[inline]
+    /// Enable/disable dragging of the chart. Consumes self.
+    pub fn drag(mut self, drag: bool) -> Self {
+        self.set_drag(drag);
+
+        self
+    }
+
+    #[inline]
+    /// Enable/disable rotation of the chart.
+    pub fn set_rotate(&mut self, rotate: bool) {
+        self.rotate = rotate
+    }
+
+    #[inline]
+    /// Enable/disable rotation of the chart. Consumes self.
+    pub fn rotate(mut self, rotate: bool) -> Self {
+        self.set_rotate(rotate);
+
+        self
+    }
+
+    #[inline]
+    /// Enable/disable zoom of the chart.
+    pub fn set_zoom(&mut self, zoom: bool) {
+        self.zoom = zoom;
+    }
+
+    #[inline]
+    /// Enable/disable zoom of the chart. Consumes self.
+    pub fn zoom(mut self, zoom: bool) -> Self {
+        self.set_zoom(zoom);
+
+        self
+    }
 }
 
 impl Default for Transform {
@@ -43,15 +148,36 @@ impl Default for Transform {
     }
 }
 
+/// Allows users to drag, rotate, and zoom in/out on your plots.
+///
+/// ## Usage
+/// Charts are designed to be easy to implement and use, while simultaniously
+/// powerful enough to use with your application. You can manipulate the
+/// following properties of a chart to get the effects you want:
+///  * `builder_cb` - Callback that is provided the chart data and chart builder. Simply treat it
+///  as any other plotter chart builder. See MouseConfig.
+///  * `mouse` - Mouse configuration. Configure how you wish the mouse to affect/manipulate the
+///  chart.
+///  * `data` - A Box of data of any type to be stored with the chart. Provided so that you can modify data
+///  without having to specify a new callback during runtime. For example, `examples/parachart.rs`
+///  uses it to store the range so it can be changed during runtime.
+///
+///  ## Examples
+///  See `examples/3dchart.rs` and `examples/parachart.rs` for examples of usage.
+pub struct Chart {
+    transform: Transform,
+    mouse: MouseConfig,
+    builder_cb:
+        Option<Box<dyn FnMut(ChartBuilder<EguiBackend>, &Transform, &Option<Box<dyn Any>>)>>,
+    data: Option<Box<dyn Any>>,
+}
+
 impl Chart {
     /// Create a new 3d chart with default settings.
     pub fn new() -> Self {
         Self {
             transform: Transform::default(),
-            mouse: false,
-            mouse_x_scale: DEFAULT_MOVE_SCALE,
-            mouse_y_scale: DEFAULT_MOVE_SCALE,
-            mouse_scroll_scale: DEFAULT_SCROLL_SCALE,
+            mouse: MouseConfig::default(),
             builder_cb: None,
             data: None,
         }
@@ -59,13 +185,13 @@ impl Chart {
 
     #[inline]
     /// Enable or disable mouse controls.
-    pub fn set_mouse(&mut self, mouse: bool) {
+    pub fn set_mouse(&mut self, mouse: MouseConfig) {
         self.mouse = mouse
     }
 
     #[inline]
     /// Enable or disable mouse controls. Consumes self.
-    pub fn mouse(mut self, mouse: bool) -> Self {
+    pub fn mouse(mut self, mouse: MouseConfig) -> Self {
         self.set_mouse(mouse);
 
         self
@@ -151,36 +277,37 @@ impl Chart {
     pub fn draw(&mut self, ui: &Ui) {
         let transform = &mut self.transform;
 
-        // First, get mouse data if mouse control is enabled
-        if self.mouse {
-            ui.input(|input| {
-                let pointer = &input.pointer;
-                let delta = pointer.delta();
+        // First, get mouse data
+        ui.input(|input| {
+            let pointer = &input.pointer;
+            let delta = pointer.delta();
 
-                // Adjust the pitch/yaw if the primary button is pressed
-                if pointer.primary_down() {
-                    let pitch_delta = delta.y * self.mouse_y_scale;
-                    let yaw_delta = delta.x * self.mouse_x_scale;
+            // Adjust the pitch/yaw if the primary button is pressed and rotation is enabled
+            if self.mouse.rotate && self.mouse.rotate_bind.is_down(pointer) {
+                let pitch_delta = delta.y * self.mouse.y_scale;
+                let yaw_delta = delta.x * self.mouse.x_scale;
 
-                    transform.pitch += pitch_delta as f64;
-                    transform.yaw += -yaw_delta as f64;
-                }
+                transform.pitch += pitch_delta as f64;
+                transform.yaw += -yaw_delta as f64;
+            }
 
-                // Adjust the x/y if the middle button is down
-                if pointer.middle_down() {
-                    let x_delta = delta.x;
-                    let y_delta = delta.y;
+            // Adjust the x/y if the middle button is down and dragging is enabled
+            if self.mouse.drag && self.mouse.drag_bind.is_down(pointer) {
+                let x_delta = delta.x;
+                let y_delta = delta.y;
 
-                    transform.x += x_delta as i32;
-                    transform.y += y_delta as i32;
-                }
+                transform.x += x_delta as i32;
+                transform.y += y_delta as i32;
+            }
 
-                let scale_delta = input.scroll_delta.y * self.mouse_scroll_scale;
+            // Adjust zoom if zoom is enabled
+            if self.mouse.zoom {
+                let scale_delta = input.scroll_delta.y * self.mouse.zoom_scale;
 
                 // !TODO! make scaling exponential
                 transform.scale = (transform.scale + scale_delta as f64).abs();
-            });
-        }
+            }
+        });
 
         let backend = EguiBackend::new(ui)
             .offset((transform.x, transform.y))

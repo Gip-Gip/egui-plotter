@@ -4,9 +4,9 @@
 
 use eframe::egui::{self, CentralPanel, Visuals};
 use egui::Key;
-use egui_plotter::{Chart, EguiBackend};
+use egui_plotter::{Chart, MouseConfig};
 use plotters::prelude::*;
-use std::{any::Any, ops::Range};
+use std::ops::Range;
 
 fn main() {
     let native_options = eframe::NativeOptions::default();
@@ -38,7 +38,7 @@ impl MyEguiApp {
         // line plots where the X represents time and we want to play through
         // the X, but that is not what we are using it for here
         let chart = Chart::new()
-            .mouse(true)
+            .mouse(MouseConfig::default().enable_all())
             .data(Box::new((-3f32..3f32, -0.5f32..3f32)))
             .builder_cb(Box::new(|mut chart_builder, _t, ranges| {
                 let ranges: &(Range<f32>, Range<f32>) =

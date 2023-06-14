@@ -95,4 +95,4 @@ mod backend;
 mod charts;
 
 pub use backend::{EguiBackend, EguiBackendError};
-pub use charts::{Chart, Transform};
+pub use charts::{Chart, MouseButton, MouseConfig, Transform};
