@@ -14,15 +14,15 @@ const SCROLL_SCALE: f32 = 0.001;
 fn main() {
     let native_options = eframe::NativeOptions::default();
     eframe::run_native(
-        "My egui App",
+        "3d Example",
         native_options,
-        Box::new(|cc| Box::new(MyEguiApp::new(cc))),
+        Box::new(|cc| Box::new(ThreeD::new(cc))),
     )
     .unwrap();
 }
 
 #[derive(Default)]
-struct MyEguiApp {
+struct ThreeD {
     chart_pitch: f32,
     chart_yaw: f32,
     chart_scale: f32,
@@ -30,7 +30,7 @@ struct MyEguiApp {
     chart_yaw_vel: f32,
 }
 
-impl MyEguiApp {
+impl ThreeD {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
         // Disable feathering as it causes artifacts
         let context = &cc.egui_ctx;
@@ -52,7 +52,7 @@ impl MyEguiApp {
     }
 }
 
-impl eframe::App for MyEguiApp {
+impl eframe::App for ThreeD {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         CentralPanel::default().show(ctx, |ui| {
             // First, get mouse data

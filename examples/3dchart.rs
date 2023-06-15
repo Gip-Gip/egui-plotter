@@ -11,18 +11,18 @@ use plotters::prelude::*;
 fn main() {
     let native_options = eframe::NativeOptions::default();
     eframe::run_native(
-        "My egui App",
+        "3d Chart Example",
         native_options,
-        Box::new(|cc| Box::new(MyEguiApp::new(cc))),
+        Box::new(|cc| Box::new(Chart3d::new(cc))),
     )
     .unwrap();
 }
 
-struct MyEguiApp {
+struct Chart3d {
     chart: Chart,
 }
 
-impl MyEguiApp {
+impl Chart3d {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
         // Disable feathering as it causes artifacts
         let context = &cc.egui_ctx;
@@ -34,16 +34,19 @@ impl MyEguiApp {
         // Also enable light mode
         context.set_visuals(Visuals::light());
 
+        // Create a new 3d chart with all mouse controls enabled and the chart slightly angled
         let chart = Chart::new()
-            .mouse(MouseConfig::default().enable_all())
+            .mouse(MouseConfig::enabled())
             .pitch(0.7)
             .yaw(0.7)
-            .scale(1.0)
-            .builder_cb(Box::new(|mut chart_builder, transform, _d| {
+            .builder_cb(Box::new(|area, transform, _d| {
+                // Build a chart like you would in any other plotter chart.
+                // The drawing area and projection transformations are provided
+                // by the callback, but otherwise everything else is the same.
                 let x_axis = (-3.0..3.0).step(0.1);
                 let z_axis = (-3.0..3.0).step(0.1);
 
-                let mut chart = chart_builder
+                let mut chart = ChartBuilder::on(area)
                     .caption(format!("3D Plot Test"), (FontFamily::SansSerif, 20))
                     .build_cartesian_3d(x_axis.clone(), -3.0..3.0, z_axis.clone())
                     .unwrap();
@@ -51,7 +54,7 @@ impl MyEguiApp {
                 chart.with_projection(|mut pb| {
                     pb.yaw = transform.yaw;
                     pb.pitch = transform.pitch;
-                    pb.scale = 0.5;
+                    pb.scale = 0.7; // Set scale to 0.7 to avoid artifacts caused by plotter's renderer
                     pb.into_matrix()
                 });
 
@@ -99,7 +102,7 @@ impl MyEguiApp {
     }
 }
 
-impl eframe::App for MyEguiApp {
+impl eframe::App for Chart3d {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         CentralPanel::default().show(ctx, |ui| {
             self.chart.draw(ui);

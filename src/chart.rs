@@ -3,20 +3,46 @@
 use std::any::Any;
 
 use egui::{PointerState, Ui};
-use plotters::prelude::{ChartBuilder, IntoDrawingArea};
+use plotters::{
+    coord::Shift,
+    prelude::{DrawingArea, IntoDrawingArea},
+};
 
 use crate::EguiBackend;
 
+/// Default pitch and yaw scale for mouse rotations.
 pub const DEFAULT_MOVE_SCALE: f32 = 0.01;
+/// Default zoom scale for scroll wheel zooming.
 pub const DEFAULT_SCROLL_SCALE: f32 = 0.001;
 
 #[derive(Debug, Copy, Clone)]
-/// Struct used to apply transformations to charts
+/// Transformations to be applied to your chart. Is modified by user input(if the mouse is enabled) and
+/// used by Chart::draw() and your builder callback.
+///
+/// Chart::draw() applies the scale and the x/y offset to your plot, so unless
+/// you want to create some effects on your own you don't need to worry about them.
+///
+/// If you are creating a 3d plot however you will have to manually apply the pitch and
+/// yaw to your chart with the following code:
+///
+/// ```ignore
+/// chart.with_projection(|mut pb| {
+///     pb.yaw = transform.yaw;
+///     pb.pitch = transform.pitch;
+///     pb.scale = 0.7; // Set scale to 0.7 to avoid artifacts caused by plotter's renderer
+///     pb.into_matrix()
+/// });
+///```
 pub struct Transform {
+    /// Pitch of your graph in 3d
     pub pitch: f64,
+    /// Yaw of your graph in 3d
     pub yaw: f64,
+    /// Scale of your graph. Applied in Chart::draw()
     pub scale: f64,
+    /// X offset of your graph. Applied in Chart::draw()
     pub x: i32,
+    /// Y offset of your graph. Applied in Chart::draw()
     pub y: i32,
 }
 
@@ -29,6 +55,7 @@ pub enum MouseButton {
 }
 
 impl MouseButton {
+    /// See if the mouse button is down given a PointerState
     pub fn is_down(&self, pointer: &PointerState) -> bool {
         match self {
             Self::Primary => pointer.primary_down(),
@@ -44,18 +71,19 @@ impl MouseButton {
 /// ## Usage
 /// MouseConfig allows you to change the ways the user interacts with your chart in the following
 /// ways:
-///  * `drag`, `rotate`, & `zoom` - You can enable dragging, rotating, and zooming your plots
-///  * `pitch_scale` & `yaw_scale` - Modifies how quick the pitch and yaw is altered when rotating with the
+///  * `drag`, `rotate`, & `zoom` - Enables dragging, rotating, and zooming in on your plots with
+///  mouse controls.
+///  * `pitch_scale` & `yaw_scale` - Modifies how quickly the pitch and yaw are rotated when rotating with the
 ///  mouse.
-///  * `zoom_scale` - Modifies how quick you zoom in/out
-///  * `drag_bind` - Mouse button bound to dragging your plot
-///  * `rotate_bind` - Mouse button bound to rotating your plot
+///  * `zoom_scale` - Modifies how quickly you zoom in/out.
+///  * `drag_bind` - Mouse button bound to dragging your plot.
+///  * `rotate_bind` - Mouse button bound to rotating your plot.
 pub struct MouseConfig {
     drag: bool,
     rotate: bool,
     zoom: bool,
-    x_scale: f32,
-    y_scale: f32,
+    yaw_scale: f32,
+    pitch_scale: f32,
     zoom_scale: f32,
     drag_bind: MouseButton,
     rotate_bind: MouseButton,
@@ -67,8 +95,8 @@ impl Default for MouseConfig {
             drag: false,
             rotate: false,
             zoom: false,
-            x_scale: DEFAULT_MOVE_SCALE,
-            y_scale: DEFAULT_MOVE_SCALE,
+            yaw_scale: DEFAULT_MOVE_SCALE,
+            pitch_scale: DEFAULT_MOVE_SCALE,
             zoom_scale: DEFAULT_SCROLL_SCALE,
             drag_bind: MouseButton::Middle,
             rotate_bind: MouseButton::Primary,
@@ -78,7 +106,22 @@ impl Default for MouseConfig {
 
 impl MouseConfig {
     #[inline]
-    /// Enable dragging, rotation, and zoom of the chart.
+    /// Create a new MouseConfig with dragging, rotationg, and zooming enabled.
+    pub fn enabled() -> Self {
+        Self {
+            drag: true,
+            rotate: true,
+            zoom: true,
+            yaw_scale: DEFAULT_MOVE_SCALE,
+            pitch_scale: DEFAULT_MOVE_SCALE,
+            zoom_scale: DEFAULT_SCROLL_SCALE,
+            drag_bind: MouseButton::Middle,
+            rotate_bind: MouseButton::Primary,
+        }
+    }
+
+    #[inline]
+    /// Enables dragging, rotating, and zooming in on your plots.
     fn set_enable_all(&mut self) {
         self.set_drag(true);
         self.set_zoom(true);
@@ -86,7 +129,7 @@ impl MouseConfig {
     }
 
     #[inline]
-    /// Enable dragging, rotation, and zoom of the chart. Consumes self.
+    /// Enables dragging, rotating, and zooming in on your plots. Consumes self.
     pub fn enable_all(mut self) -> Self {
         self.set_enable_all();
 
@@ -134,6 +177,20 @@ impl MouseConfig {
 
         self
     }
+
+    #[inline]
+    /// Change the pitch scale.
+    pub fn set_pitch_scale(&mut self, scale: f32) {
+        self.pitch_scale = scale
+    }
+
+    #[inline]
+    /// Change the pitch scale. Consumes self.
+    pub fn pitch_scale(mut self, scale: f32) -> Self {
+        self.set_pitch_scale(scale);
+
+        self
+    }
 }
 
 impl Default for Transform {
@@ -152,10 +209,10 @@ impl Default for Transform {
 ///
 /// ## Usage
 /// Charts are designed to be easy to implement and use, while simultaniously
-/// powerful enough to use with your application. You can manipulate the
+/// being powerful enough for your application. You can manipulate the
 /// following properties of a chart to get the effects you want:
-///  * `builder_cb` - Callback that is provided the chart data and chart builder. Simply treat it
-///  as any other plotter chart builder. See MouseConfig.
+///  * `builder_cb` - Callback used to populate the chart. Is provided a DrawingArea and the
+///  chart's `data`.
 ///  * `mouse` - Mouse configuration. Configure how you wish the mouse to affect/manipulate the
 ///  chart.
 ///  * `data` - A Box of data of any type to be stored with the chart. Provided so that you can modify data
@@ -167,8 +224,9 @@ impl Default for Transform {
 pub struct Chart {
     transform: Transform,
     mouse: MouseConfig,
-    builder_cb:
-        Option<Box<dyn FnMut(ChartBuilder<EguiBackend>, &Transform, &Option<Box<dyn Any>>)>>,
+    builder_cb: Option<
+        Box<dyn FnMut(&mut DrawingArea<EguiBackend, Shift>, &Transform, &Option<Box<dyn Any>>)>,
+    >,
     data: Option<Box<dyn Any>>,
 }
 
@@ -198,10 +256,12 @@ impl Chart {
     }
 
     #[inline]
-    /// Set the builder callback
+    /// Set the builder callback.
     pub fn set_builder_cb(
         &mut self,
-        builder_cb: Box<dyn FnMut(ChartBuilder<EguiBackend>, &Transform, &Option<Box<dyn Any>>)>,
+        builder_cb: Box<
+            dyn FnMut(&mut DrawingArea<EguiBackend, Shift>, &Transform, &Option<Box<dyn Any>>),
+        >,
     ) {
         self.builder_cb = Some(builder_cb)
     }
@@ -210,7 +270,9 @@ impl Chart {
     /// Set the builder callback. Consumes self.
     pub fn builder_cb(
         mut self,
-        builder_cb: Box<dyn FnMut(ChartBuilder<EguiBackend>, &Transform, &Option<Box<dyn Any>>)>,
+        builder_cb: Box<
+            dyn FnMut(&mut DrawingArea<EguiBackend, Shift>, &Transform, &Option<Box<dyn Any>>),
+        >,
     ) -> Self {
         self.set_builder_cb(builder_cb);
 
@@ -273,7 +335,7 @@ impl Chart {
         self
     }
 
-    /// Draw the chart to a UI element
+    /// Call the callback and draw the chart to a UI element.
     pub fn draw(&mut self, ui: &Ui) {
         let transform = &mut self.transform;
 
@@ -284,8 +346,8 @@ impl Chart {
 
             // Adjust the pitch/yaw if the primary button is pressed and rotation is enabled
             if self.mouse.rotate && self.mouse.rotate_bind.is_down(pointer) {
-                let pitch_delta = delta.y * self.mouse.y_scale;
-                let yaw_delta = delta.x * self.mouse.x_scale;
+                let pitch_delta = delta.y * self.mouse.pitch_scale;
+                let yaw_delta = delta.x * self.mouse.yaw_scale;
 
                 transform.pitch += pitch_delta as f64;
                 transform.yaw += -yaw_delta as f64;
@@ -309,21 +371,19 @@ impl Chart {
             }
         });
 
-        let backend = EguiBackend::new(ui)
+        let mut area = EguiBackend::new(ui)
             .offset((transform.x, transform.y))
             .scale(transform.scale as f32)
             .into_drawing_area();
 
-        let chart = ChartBuilder::on(&backend);
-
         match &mut self.builder_cb {
             Some(cb) => {
-                cb(chart, transform, &self.data);
+                cb(&mut area, transform, &self.data);
             }
 
             None => {}
         }
 
-        backend.present().unwrap();
+        area.present().unwrap();
     }
 }

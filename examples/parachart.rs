@@ -11,18 +11,18 @@ use std::ops::Range;
 fn main() {
     let native_options = eframe::NativeOptions::default();
     eframe::run_native(
-        "My egui App",
+        "ParaChart Example",
         native_options,
-        Box::new(|cc| Box::new(MyEguiApp::new(cc))),
+        Box::new(|cc| Box::new(ParaChart::new(cc))),
     )
     .unwrap();
 }
 
-struct MyEguiApp {
+struct ParaChart {
     chart: Chart,
 }
 
-impl MyEguiApp {
+impl ParaChart {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
         // Disable feathering as it causes artifacts
         let context = &cc.egui_ctx;
@@ -38,15 +38,18 @@ impl MyEguiApp {
         // line plots where the X represents time and we want to play through
         // the X, but that is not what we are using it for here
         let chart = Chart::new()
-            .mouse(MouseConfig::default().enable_all())
+            .mouse(MouseConfig::enabled())
             .data(Box::new((-3f32..3f32, -0.5f32..3f32)))
-            .builder_cb(Box::new(|mut chart_builder, _t, ranges| {
+            .builder_cb(Box::new(|area, _t, ranges| {
+                // Build a chart like you would in any other plotter chart.
+                // The drawing area and ranges are provided by the callback,
+                // but otherwise everything else is the same.
                 let ranges: &(Range<f32>, Range<f32>) =
                     ranges.as_ref().unwrap().downcast_ref().unwrap();
 
                 let (x_range, y_range) = ranges;
 
-                let mut chart = chart_builder
+                let mut chart = ChartBuilder::on(area)
                     .caption("y=x^2", ("sans-serif", 50).into_font())
                     .margin(5)
                     .x_label_area_size(30)
@@ -79,23 +82,22 @@ impl MyEguiApp {
     }
 }
 
-impl eframe::App for MyEguiApp {
+impl eframe::App for ParaChart {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         CentralPanel::default().show(ctx, |ui| {
             // Press 1 for the range -1..1, 2 for -2..2, 3 for -3..3
-            let range = ui.input(|input| {
+            ui.input(|input| {
                 if input.key_down(Key::Num1) {
-                    return (-1f32..1f32, -0.5f32..1f32);
+                    self.chart.set_data(Box::new((-1f32..1f32, -0.5f32..1f32)));
                 }
                 if input.key_down(Key::Num2) {
-                    return (-2f32..2f32, -0.5f32..2f32);
+                    self.chart.set_data(Box::new((-2f32..2f32, -0.5f32..2f32)));
                 }
 
-                (-3f32..3f32, -0.5f32..3f32)
+                if input.key_down(Key::Num3) {
+                    self.chart.set_data(Box::new((-3f32..3f32, -0.5f32..3f32)));
+                }
             });
-
-            // Update the range by setting the data
-            self.chart.set_data(Box::new(range));
 
             self.chart.draw(ui);
         });

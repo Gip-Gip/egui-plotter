@@ -9,17 +9,17 @@ use plotters::prelude::*;
 fn main() {
     let native_options = eframe::NativeOptions::default();
     eframe::run_native(
-        "My egui App",
+        "Simple Example",
         native_options,
-        Box::new(|cc| Box::new(MyEguiApp::new(cc))),
+        Box::new(|cc| Box::new(Simple::new(cc))),
     )
     .unwrap();
 }
 
 #[derive(Default)]
-struct MyEguiApp {}
+struct Simple {}
 
-impl MyEguiApp {
+impl Simple {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
         // Disable feathering as it causes artifacts
         let context = &cc.egui_ctx;
@@ -35,7 +35,7 @@ impl MyEguiApp {
     }
 }
 
-impl eframe::App for MyEguiApp {
+impl eframe::App for Simple {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         CentralPanel::default().show(ctx, |ui| {
             let root = EguiBackend::new(ui).into_drawing_area();
