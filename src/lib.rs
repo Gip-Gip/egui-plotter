@@ -13,7 +13,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! egui-plotter = "0.1.0"
+//! egui-plotter = "0.2.0"
 //! ```
 //!
 //! **It is also heavily recommended you disable feathering in your egui context,
