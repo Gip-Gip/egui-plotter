@@ -4,9 +4,10 @@ use std::error::Error as ErrorTrait;
 use std::fmt::{Display, Formatter, Result as FmtResult};
 use std::ops::{Add, AddAssign, MulAssign, Sub, SubAssign};
 
-use egui::{FontFamily as EguiFontFamily, Pos2, Rect, Ui};
-use emath::Align2;
-use epaint::{Color32, FontId, PathShape, Stroke};
+use egui::{
+    epaint::PathShape, Align2, Color32, FontFamily as EguiFontFamily, FontId, Pos2, Rect, Stroke,
+    Ui,
+};
 use plotters_backend::{
     BackendColor, BackendCoord, BackendStyle, BackendTextStyle, DrawingBackend, DrawingErrorKind,
     FontFamily as PlottersFontFamily,

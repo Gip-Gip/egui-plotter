@@ -4,10 +4,10 @@
 
 use std::time::Duration;
 
-use eframe::egui::{self, CentralPanel, Visuals};
+use eframe;
+use egui::{self, CentralPanel, Visuals};
 use egui_plotter::EguiBackend;
 use plotters::prelude::*;
-
 const MOVE_SCALE: f32 = 0.01;
 const SCROLL_SCALE: f32 = 0.001;
 

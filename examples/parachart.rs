@@ -2,8 +2,7 @@
 //! [eframe](https://docs.rs/eframe/0.22.0/eframe/index.html#usage-native) and
 //! [plotters](https://docs.rs/plotters/0.3.4/plotters/index.html#quick-start)
 
-use eframe::egui::{self, CentralPanel, Visuals};
-use egui::Key;
+use eframe::egui::{self, CentralPanel, Key, Visuals};
 use egui_plotter::{Chart, MouseConfig};
 use plotters::prelude::*;
 use std::ops::Range;
