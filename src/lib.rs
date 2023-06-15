@@ -212,4 +212,6 @@ mod backend;
 mod chart;
 
 pub use backend::{EguiBackend, EguiBackendError};
-pub use chart::{Chart, MouseButton, MouseConfig, Transform, DEFAULT_MOVE_SCALE, DEFAULT_SCROLL_SCALE};
+pub use chart::{
+    Chart, MouseButton, MouseConfig, Transform, DEFAULT_MOVE_SCALE, DEFAULT_SCROLL_SCALE,
+};
