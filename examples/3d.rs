@@ -136,7 +136,6 @@ impl eframe::App for ThreeD {
                 .draw()
                 .unwrap();
 
-            // To avoid the IO failure being ignored silently, we manually call the present function
             root.present().unwrap();
         });
 

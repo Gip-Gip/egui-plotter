@@ -210,6 +210,7 @@
 
 mod backend;
 mod chart;
+pub mod charts;
 
 pub use backend::{EguiBackend, EguiBackendError};
 pub use chart::{
