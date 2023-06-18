@@ -1,7 +1,6 @@
 //! Chart with data on the Y and time on the X axis
 
 use std::{
-    any::Any,
     cmp::Ordering,
     ops::Range,
     time::{Duration, Instant},
@@ -13,12 +12,14 @@ use plotters::{
     series::LineSeries,
     style::{
         full_palette::{GREY, RED_900},
-        Color, FontDesc, RGBAColor, ShapeStyle, TextStyle, BLACK,
+        Color, FontDesc, ShapeStyle,
     },
 };
 use plotters_backend::{FontFamily, FontStyle};
 
 use crate::{Chart, MouseConfig};
+
+const MIN_DELTA: f32 = 0.000_010;
 
 #[derive(Debug, Clone)]
 struct TimeConfig {
@@ -31,6 +32,8 @@ struct TimeConfig {
 pub struct TimeData {
     config: TimeConfig,
     playback_start: Option<Instant>,
+    pause_start: Option<Instant>,
+    playback_speed: f32,
     chart: Chart,
 }
 
@@ -141,29 +144,53 @@ impl TimeData {
         Self {
             config,
             playback_start: None,
+            pause_start: None,
+            playback_speed: 1.0,
             chart,
         }
     }
 
+    pub fn set_time(&mut self, time: f32) {
+        let start_time = Some(Instant::now() - Duration::from_secs_f32(time));
+        match self.playback_start {
+            Some(_) => {
+                if let Some(_) = self.pause_start {
+                    self.pause_start = Some(Instant::now());
+                }
+
+                self.playback_start = start_time;
+            }
+            None => {
+                self.playback_start = start_time;
+                self.pause_start = Some(Instant::now());
+            }
+        }
+    }
+
+    #[inline]
+    pub fn time(mut self, time: f32) -> Self {
+        self.set_time(time);
+
+        self
+    }
+
+    #[inline]
+    pub fn set_playback_speed(&mut self, speed: f32) {
+        self.playback_speed = speed;
+    }
+
+    #[inline]
+    pub fn playback_speed(mut self, speed: f32) -> Self {
+        self.set_playback_speed(speed);
+
+        self
+    }
+
     pub fn draw(&mut self, ui: &Ui) {
-        if let Some(playback_start) = self.playback_start {
+        if let Some(_) = self.playback_start {
             let (mut x_range, y_range) = self.config.range.clone();
 
-            let now = Instant::now();
-
-            let base_delta = x_range.end - x_range.start;
-            let current_delta = now.duration_since(playback_start).as_secs_f32();
-
-            let end = match base_delta > current_delta {
-                true => current_delta + x_range.start,
-                false => {
-                    self.playback_start = None;
-
-                    x_range.end
-                }
-            };
-
-            x_range = x_range.start..end;
+            x_range = x_range.start..self.current_time();
 
             let mut current_config = self.config.clone();
 
@@ -177,6 +204,87 @@ impl TimeData {
 
     #[inline]
     pub fn start_playback(&mut self) {
-        self.playback_start = Some(Instant::now())
+        self.playback_start = Some(Instant::now());
+        self.pause_start = None;
+    }
+
+    #[inline]
+    pub fn stop_playback(&mut self) {
+        self.playback_start = None;
+        self.pause_start = None;
+    }
+
+    pub fn toggle_playback(&mut self) {
+        match self.playback_start {
+            Some(playback_start) => match self.pause_start {
+                Some(pause_start) => {
+                    let delta = Instant::now().duration_since(pause_start);
+
+                    self.pause_start = None;
+                    self.playback_start = Some(playback_start + delta);
+                }
+                None => self.pause_start = Some(Instant::now()),
+            },
+
+            None => {
+                self.start_playback();
+            }
+        }
+    }
+
+    #[inline]
+    pub fn is_playing(&self) -> bool {
+        self.playback_start != None && self.pause_start == None
+    }
+
+    #[inline]
+    pub fn start_time(&self) -> f32 {
+        let (x_range, _) = &self.config.range;
+
+        x_range.start
+    }
+
+    pub fn current_time(&mut self) -> f32 {
+        if let Some(playback_start) = self.playback_start {
+            let now = Instant::now();
+
+            let (x_range, _) = &self.config.range;
+
+            let base_delta = x_range.end - x_range.start;
+
+            // Ensure deltas are over 10us, otherwise they can cause overflows
+            // in the plotters library
+            let current_delta = MIN_DELTA
+                + self.playback_speed
+                    * match self.pause_start {
+                        Some(pause_start) => {
+                            pause_start.duration_since(playback_start).as_secs_f32()
+                        }
+                        None => now.duration_since(playback_start).as_secs_f32(),
+                    };
+
+            match base_delta > current_delta {
+                true => current_delta + x_range.start,
+                false => {
+                    self.playback_start = None;
+
+                    x_range.end
+                }
+            }
+        } else {
+            self.start_time()
+        }
+    }
+
+    #[inline]
+    pub fn end_time(&self) -> f32 {
+        let (x_range, _) = &self.config.range;
+
+        x_range.end
+    }
+
+    #[inline]
+    pub fn get_playback_speed(&self) -> f32 {
+        self.playback_speed
     }
 }

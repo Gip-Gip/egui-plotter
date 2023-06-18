@@ -3,7 +3,7 @@
 use std::time::Duration;
 
 use eframe::egui::{self, CentralPanel, Visuals};
-use egui::Key;
+use egui::{Key, Slider, TopBottomPanel};
 use egui_plotter::{charts::TimeData, Chart, MouseConfig};
 use plotters::prelude::*;
 
@@ -50,13 +50,52 @@ impl TimeDataExample {
 
 impl eframe::App for TimeDataExample {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        TopBottomPanel::bottom("playmenu").show(ctx, |ui| {
+            ui.horizontal(|ui| {
+                match self.timechart.is_playing() {
+                    true => {
+                        if ui.button("Pause").clicked() {
+                            self.timechart.toggle_playback();
+                        }
+                    }
+                    false => {
+                        if ui.button("Play").clicked() {
+                            self.timechart.toggle_playback();
+                        }
+                    }
+                }
+
+                let start_time = self.timechart.start_time();
+                let current_time = self.timechart.current_time();
+                let mut set_time = current_time;
+                let end_time = self.timechart.end_time();
+                let mut speed = self.timechart.get_playback_speed();
+
+                let time_slider =
+                    Slider::new(&mut set_time, start_time..=end_time).show_value(false);
+
+                let speed_slider = Slider::new(&mut speed, 0.25..=4.0).logarithmic(true);
+
+                ui.add(time_slider);
+                ui.add(speed_slider);
+
+                if set_time != current_time {
+                    self.timechart.set_time(set_time);
+                }
+
+                self.timechart.set_playback_speed(speed);
+
+                ui.label(format!("{} : {}", current_time, end_time));
+            })
+        });
+
         CentralPanel::default().show(ctx, |ui| {
             self.timechart.draw(ui);
         });
 
         // If space bar is down, start playback
         if ctx.input(|input| input.key_pressed(Key::Space)) {
-            self.timechart.start_playback();
+            self.timechart.toggle_playback();
         }
 
         // Limit framerate to 100fps
