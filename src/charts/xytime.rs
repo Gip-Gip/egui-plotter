@@ -3,6 +3,7 @@
 use std::{
     cmp::Ordering,
     ops::Range,
+    sync::Arc,
     time::{Duration, Instant},
 };
 
@@ -23,11 +24,11 @@ const MIN_DELTA: f32 = 0.000_010;
 
 #[derive(Debug, Clone)]
 struct XyTimeConfig {
-    points: Vec<(f32, f32)>,
+    points: Arc<[(f32, f32)]>,
     range: (Range<f32>, Range<f32>),
-    x_unit: String,
-    y_unit: String,
-    caption: String,
+    x_unit: Arc<str>,
+    y_unit: Arc<str>,
+    caption: Arc<str>,
 }
 
 pub struct XyTimeData {
@@ -35,9 +36,9 @@ pub struct XyTimeData {
     playback_start: Option<Instant>,
     pause_start: Option<Instant>,
     playback_speed: f32,
-    points: Vec<(f32, f32)>,
-    ranges: Vec<(Range<f32>, Range<f32>)>,
-    times: Vec<f32>,
+    points: Arc<[(f32, f32)]>,
+    ranges: Arc<[(Range<f32>, Range<f32>)]>,
+    times: Arc<[f32]>,
     chart: Chart,
 }
 
@@ -95,12 +96,23 @@ impl XyTimeData {
 
         let y_unit: String = y_unit.split("").map(|c| format!("{}\n", c)).collect();
 
+        // Turn all the vecs and strings into arcs since they are more or less read-only at
+        // this point
+
+        let points: Arc<[(f32, f32)]> = points.into();
+        let ranges: Arc<[(Range<f32>, Range<f32>)]> = ranges.into();
+        let times: Arc<[f32]> = times.into();
+
+        let x_unit: Arc<str> = x_unit.into();
+        let y_unit: Arc<str> = y_unit.into();
+        let caption: Arc<str> = caption.into();
+
         let config = XyTimeConfig {
             points: points.clone(),
             range: ranges.last().unwrap().clone(),
-            x_unit: x_unit.to_string(),
+            x_unit,
             y_unit,
-            caption: caption.to_string(),
+            caption,
         };
 
         let chart = Chart::new()
@@ -141,14 +153,14 @@ impl XyTimeData {
                     .configure_mesh()
                     .label_style(font_desc.clone())
                     .light_line_style(grid_style)
-                    .x_desc(&data.x_unit)
+                    .x_desc(&data.x_unit.to_string())
                     .set_all_tick_mark_size(4)
-                    .y_desc(&data.y_unit)
+                    .y_desc(&data.y_unit.to_string())
                     .draw()
                     .unwrap();
 
                 chart
-                    .draw_series(LineSeries::new(data.points.clone(), line_style))
+                    .draw_series(LineSeries::new(data.points.to_vec(), line_style))
                     .unwrap();
             }));
 
@@ -213,12 +225,12 @@ impl XyTimeData {
             };
 
             // The time index is always a valid index, so ensure the range is inclusive
-            let points = self.points[..=time_index].to_vec();
+            let points = &self.points[..=time_index];
             let range = self.ranges[time_index].clone();
 
             let mut current_config = self.config.clone();
 
-            current_config.points = points;
+            current_config.points = points.into();
             current_config.range = range;
 
             self.chart.set_data(Box::new(current_config));
