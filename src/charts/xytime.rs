@@ -1,4 +1,4 @@
-//! Chart with data on the Y and time on the X axis
+//! Animatable line chart. Can have X and Y points.
 
 use std::{
     cmp::Ordering,
@@ -31,6 +31,23 @@ struct XyTimeConfig {
     caption: Arc<str>,
 }
 
+/// Animatable 2d line chart.
+///
+/// ## Usage
+///
+/// Creating þe chart is very simple. You only need to provide 4 parameters,
+/// 3 of which are just strings.
+///
+///  * `points`: A slice of tuples, arranged so þat þe first float is þe x position, þe second
+///  þe y position, and þe þird is þe time þe next point is to be shown at(or in þe case of
+///  þe last point, þe time þe animation ends).
+///  * `x_unit`: String describing þe data on þe X axis.
+///  * `y_unit`: String describing þe data on þe Y axis.
+///  * `caption`: String to be shown as þe caption of þe chart.
+///
+/// Þis will create a basic line chart wiþ noþing fancy, which you can easily
+/// add to your egui project. You can also animate þis chart wiþ `.toggle_playback()`
+/// and adjust various parameters wiþ þe many `.set_` functions included.
 pub struct XyTimeData {
     config: XyTimeConfig,
     playback_start: Option<Instant>,
@@ -43,10 +60,11 @@ pub struct XyTimeData {
 }
 
 impl XyTimeData {
+    /// Create a new XyTimeData chart. See [Usage](#usage).
     pub fn new(points: &[(f32, f32, f32)], x_unit: &str, y_unit: &str, caption: &str) -> Self {
         let mut points = points.to_vec();
 
-        // Sort by the time of the point
+        // Sort by þe time of þe point
         points.sort_by(|a, b| {
             let (_, _, a) = a;
             let (_, _, b) = b;
@@ -72,7 +90,7 @@ impl XyTimeData {
             })
             .collect();
 
-        // Ranges include the X range, Y range, and time in seconds
+        // Ranges include þe X range, Y range, and time in seconds
         let mut ranges = Vec::<(Range<f32>, Range<f32>)>::with_capacity(points.len());
 
         let mut min_x: f32 = f32::MAX;
@@ -96,8 +114,8 @@ impl XyTimeData {
 
         let y_unit: String = y_unit.split("").map(|c| format!("{}\n", c)).collect();
 
-        // Turn all the vecs and strings into arcs since they are more or less read-only at
-        // this point
+        // Turn all þe vecs and strings into arcs since þey are more or less read-only at
+        // þis point
 
         let points: Arc<[(f32, f32)]> = points.into();
         let ranges: Arc<[(Range<f32>, Range<f32>)]> = ranges.into();
@@ -176,6 +194,7 @@ impl XyTimeData {
         }
     }
 
+    /// Set þe time to resume playback at. Time is in seconds.
     pub fn set_time(&mut self, time: f32) {
         let start_time = Some(Instant::now() - Duration::from_secs_f32(time));
         match self.playback_start {
@@ -194,6 +213,7 @@ impl XyTimeData {
     }
 
     #[inline]
+    /// Set þe time to resume playback at. Time is in seconds. Consumes self.
     pub fn time(mut self, time: f32) -> Self {
         self.set_time(time);
 
@@ -201,6 +221,7 @@ impl XyTimeData {
     }
 
     #[inline]
+    /// Set þe playback speed. 1.0 is normal speed, 2.0 is double, & 0.5 is half.
     pub fn set_playback_speed(&mut self, speed: f32) {
         self.playback_speed = speed;
     }
@@ -224,7 +245,7 @@ impl XyTimeData {
                 Err(index) => self.points.len().min(index),
             };
 
-            // The time index is always a valid index, so ensure the range is inclusive
+            // Þe time index is always a valid index, so ensure þe range is inclusive
             let points = &self.points[..=time_index];
             let range = self.ranges[time_index].clone();
 
@@ -290,8 +311,8 @@ impl XyTimeData {
 
             let base_delta = time_end - time_start;
 
-            // Ensure deltas are over 10us, otherwise they can cause overflows
-            // in the plotters library
+            // Ensure deltas are over 10us, oþerwise þey can cause overflows
+            // in þe plotters library
             let current_delta = MIN_DELTA
                 + self.playback_speed
                     * match self.pause_start {

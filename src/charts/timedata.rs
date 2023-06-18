@@ -1,4 +1,4 @@
-//! Chart with data on the Y and time on the X axis
+//! Chart wiþ data on þe Y and time on þe X axis
 
 use std::{
     cmp::Ordering,

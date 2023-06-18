@@ -1,4 +1,4 @@
-//! Simple example using the pre-defined time chart type
+//! Simple example using þe pre-defined time chart type
 
 use std::time::Duration;
 
@@ -26,7 +26,7 @@ struct TimeDataExample {
 
 impl TimeDataExample {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        // Disable feathering as it causes artifacts
+        // Disable feaþering as it causes artifacts
         let context = &cc.egui_ctx;
 
         context.tessellation_options_mut(|tess_options| {
