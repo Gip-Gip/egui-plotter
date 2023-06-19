@@ -35,19 +35,19 @@ struct XyTimeConfig {
 ///
 /// ## Usage
 ///
-/// Creating þe chart is very simple. You only need to provide 4 parameters,
+/// Creating the chart is very simple. You only need to provide 4 parameters,
 /// 3 of which are just strings.
 ///
-///  * `points`: A slice of tuples, arranged so þat þe first float is þe x position, þe second
-///  þe y position, and þe þird is þe time þe next point is to be shown at(or in þe case of
-///  þe last point, þe time þe animation ends).
-///  * `x_unit`: String describing þe data on þe X axis.
-///  * `y_unit`: String describing þe data on þe Y axis.
-///  * `caption`: String to be shown as þe caption of þe chart.
+///  * `points`: A slice of tuples, arranged so that the first float is the x position, the second
+///  the y position, and the third is the time the next point is to be shown at(or in the case of
+///  the last point, the time the animation ends).
+///  * `x_unit`: String describing the data on the X axis.
+///  * `y_unit`: String describing the data on the Y axis.
+///  * `caption`: String to be shown as the caption of the chart.
 ///
-/// Þis will create a basic line chart wiþ noþing fancy, which you can easily
-/// add to your egui project. You can also animate þis chart wiþ `.toggle_playback()`
-/// and adjust various parameters wiþ þe many `.set_` functions included.
+/// This will create a basic line chart with nothing fancy, which you can easily
+/// add to your egui project. You can also animate this chart with `.toggle_playback()`
+/// and adjust various parameters with the many `.set_` functions included.
 pub struct XyTimeData {
     config: XyTimeConfig,
     playback_start: Option<Instant>,
@@ -64,7 +64,7 @@ impl XyTimeData {
     pub fn new(points: &[(f32, f32, f32)], x_unit: &str, y_unit: &str, caption: &str) -> Self {
         let mut points = points.to_vec();
 
-        // Sort by þe time of þe point
+        // Sort by the time of the point
         points.sort_by(|a, b| {
             let (_, _, a) = a;
             let (_, _, b) = b;
@@ -90,7 +90,7 @@ impl XyTimeData {
             })
             .collect();
 
-        // Ranges include þe X range, Y range, and time in seconds
+        // Ranges include the X range, Y range, and time in seconds
         let mut ranges = Vec::<(Range<f32>, Range<f32>)>::with_capacity(points.len());
 
         let mut min_x: f32 = f32::MAX;
@@ -114,8 +114,8 @@ impl XyTimeData {
 
         let y_unit: String = y_unit.split("").map(|c| format!("{}\n", c)).collect();
 
-        // Turn all þe vecs and strings into arcs since þey are more or less read-only at
-        // þis point
+        // Turn all the vecs and strings into arcs since they are more or less read-only at
+        // this point
 
         let points: Arc<[(f32, f32)]> = points.into();
         let ranges: Arc<[(Range<f32>, Range<f32>)]> = ranges.into();
@@ -194,7 +194,7 @@ impl XyTimeData {
         }
     }
 
-    /// Set þe time to resume playback at. Time is in seconds.
+    /// Set the time to resume playback at. Time is in seconds.
     pub fn set_time(&mut self, time: f32) {
         let start_time = Some(Instant::now() - Duration::from_secs_f32(time));
         match self.playback_start {
@@ -213,7 +213,7 @@ impl XyTimeData {
     }
 
     #[inline]
-    /// Set þe time to resume playback at. Time is in seconds. Consumes self.
+    /// Set the time to resume playback at. Time is in seconds. Consumes self.
     pub fn time(mut self, time: f32) -> Self {
         self.set_time(time);
 
@@ -221,18 +221,21 @@ impl XyTimeData {
     }
 
     #[inline]
-    /// Set þe playback speed. 1.0 is normal speed, 2.0 is double, & 0.5 is half.
+    /// Set the playback speed. 1.0 is normal speed, 2.0 is double, & 0.5 is half.
     pub fn set_playback_speed(&mut self, speed: f32) {
         self.playback_speed = speed;
     }
 
     #[inline]
+    /// Set the playback speed. 1.0 is normal speed, 2.0 is double, & 0.5 is half. Consumes self.
     pub fn playback_speed(mut self, speed: f32) -> Self {
         self.set_playback_speed(speed);
 
         self
     }
 
+    /// Draw the chart to a Ui. Will also proceed to animate the chart if playback is currently
+    /// enabled.
     pub fn draw(&mut self, ui: &Ui) {
         if let Some(_) = self.playback_start {
             let time = self.current_time();
@@ -245,7 +248,7 @@ impl XyTimeData {
                 Err(index) => self.points.len().min(index),
             };
 
-            // Þe time index is always a valid index, so ensure þe range is inclusive
+            // The time index is always a valid index, so ensure the range is inclusive
             let points = &self.points[..=time_index];
             let range = self.ranges[time_index].clone();
 
@@ -261,17 +264,20 @@ impl XyTimeData {
     }
 
     #[inline]
+    /// Start/enable playback of the chart.
     pub fn start_playback(&mut self) {
         self.playback_start = Some(Instant::now());
         self.pause_start = None;
     }
 
     #[inline]
+    /// Stop/disable playback of the chart.
     pub fn stop_playback(&mut self) {
         self.playback_start = None;
         self.pause_start = None;
     }
 
+    /// Toggle playback of the chart.
     pub fn toggle_playback(&mut self) {
         match self.playback_start {
             Some(playback_start) => match self.pause_start {
@@ -291,17 +297,20 @@ impl XyTimeData {
     }
 
     #[inline]
+    /// Return true if playback is currently enabled & underway.
     pub fn is_playing(&self) -> bool {
         self.playback_start != None && self.pause_start == None
     }
 
     #[inline]
+    /// Return the time the chart starts at when playback is enabled.
     pub fn start_time(&self) -> f32 {
         let time_start = *self.times.first().unwrap();
 
         time_start
     }
 
+    /// Return the current time to be animated when playback is enabled.
     pub fn current_time(&mut self) -> f32 {
         if let Some(playback_start) = self.playback_start {
             let now = Instant::now();
@@ -311,8 +320,8 @@ impl XyTimeData {
 
             let base_delta = time_end - time_start;
 
-            // Ensure deltas are over 10us, oþerwise þey can cause overflows
-            // in þe plotters library
+            // Ensure deltas are over 10us, otherwise they can cause overflows
+            // in the plotters library
             let current_delta = MIN_DELTA
                 + self.playback_speed
                     * match self.pause_start {
@@ -336,6 +345,7 @@ impl XyTimeData {
     }
 
     #[inline]
+    /// Return the time the chart finished animating at when playback is enabled.
     pub fn end_time(&self) -> f32 {
         let time_end = *self.times.last().unwrap();
 
@@ -343,6 +353,7 @@ impl XyTimeData {
     }
 
     #[inline]
+    /// Return the speed the chart is animated at.
     pub fn get_playback_speed(&self) -> f32 {
         self.playback_speed
     }

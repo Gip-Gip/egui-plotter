@@ -1,24 +1,10 @@
-//! Chart wiþ data on þe Y and time on þe X axis
-
-use std::{
-    cmp::Ordering,
-    ops::Range,
-    time::{Duration, Instant},
-};
+//! Animatable chart with data on the Y and time on the X axis
 
 use egui::Ui;
-use plotters::{
-    prelude::ChartBuilder,
-    series::LineSeries,
-    style::{
-        full_palette::{GREY, RED_900},
-        Color, FontDesc, ShapeStyle,
-    },
-};
-use plotters_backend::{FontFamily, FontStyle};
 
-use crate::{charts::XyTimeData, Chart, MouseConfig};
+use crate::charts::XyTimeData;
 
+/// Animatabe chart with time on the X axis and data on the Y axis.
 pub struct TimeData {
     chart: XyTimeData,
 }

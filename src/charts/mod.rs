@@ -1,4 +1,4 @@
-//! Various type of charts
+//! Various type of premade charts.
 
 mod timedata;
 mod xytime;
