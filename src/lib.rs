@@ -140,15 +140,12 @@
 //!         // We use data to adjust the range of the chart. This can be useful for
 //!         // line plots where the X represents time and we want to play through
 //!         // the X, but that is not what we are using it for here
-//!         let chart = Chart::new()
+//!         let chart = Chart::new((-3f32..3f32, -0.5f32..3f32))
 //!             .mouse(MouseConfig::enabled())
-//!             .data(Box::new((-3f32..3f32, -0.5f32..3f32)))
 //!             .builder_cb(Box::new(|area, _t, ranges| {
 //!                 // Build a chart like you would in any other plotter chart.
 //!                 // The drawing area and ranges are provided by the callback,
 //!                 // but otherwise everything else is the same.
-//!                 let ranges: &(Range<f32>, Range<f32>) =
-//!                     ranges.as_ref().unwrap().downcast_ref().unwrap();
 //!
 //!                 let (x_range, y_range) = ranges;
 //!

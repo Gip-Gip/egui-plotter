@@ -19,7 +19,7 @@ fn main() {
 }
 
 struct Chart3d {
-    chart: Chart,
+    chart: Chart<()>,
 }
 
 impl Chart3d {
@@ -35,7 +35,7 @@ impl Chart3d {
         context.set_visuals(Visuals::light());
 
         // Create a new 3d chart with all mouse controls enabled and the chart slightly angled
-        let chart = Chart::new()
+        let chart = Chart::new(())
             .mouse(MouseConfig::enabled())
             .pitch(0.7)
             .yaw(0.7)

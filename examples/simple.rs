@@ -17,7 +17,7 @@ fn main() {
 }
 
 #[derive(Default)]
-struct Simple {}
+struct Simple;
 
 impl Simple {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
