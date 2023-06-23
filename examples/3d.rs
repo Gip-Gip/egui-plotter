@@ -4,7 +4,6 @@
 
 use std::time::Duration;
 
-use eframe;
 use egui::{self, CentralPanel, Visuals};
 use egui_plotter::EguiBackend;
 use plotters::prelude::*;
@@ -21,7 +20,6 @@ fn main() {
     .unwrap();
 }
 
-#[derive(Default)]
 struct ThreeD {
     chart_pitch: f32,
     chart_yaw: f32,
@@ -87,7 +85,7 @@ impl eframe::App for ThreeD {
 
             let mut chart = ChartBuilder::on(&root)
                 .caption(format!("3D Plot Test"), (FontFamily::SansSerif, 20))
-                .build_cartesian_3d(x_axis.clone(), -3.0..3.0, z_axis.clone())
+                .build_cartesian_3d(x_axis, -3.0..3.0, z_axis)
                 .unwrap();
 
             chart.with_projection(|mut pb| {
@@ -128,11 +126,11 @@ impl eframe::App for ThreeD {
                 ))
                 .unwrap()
                 .label("Line")
-                .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &BLACK));
+                .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], BLACK));
 
             chart
                 .configure_series_labels()
-                .border_style(&BLACK)
+                .border_style(BLACK)
                 .draw()
                 .unwrap();
 

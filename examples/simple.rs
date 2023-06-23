@@ -16,7 +16,6 @@ fn main() {
     .unwrap();
 }
 
-#[derive(Default)]
 struct Simple;
 
 impl Simple {
@@ -31,7 +30,7 @@ impl Simple {
         // Also enable light mode
         context.set_visuals(Visuals::light());
 
-        Self::default()
+        Self
     }
 }
 
@@ -57,12 +56,12 @@ impl eframe::App for Simple {
                 ))
                 .unwrap()
                 .label("y = x^2")
-                .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &RED));
+                .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], RED));
 
             chart
                 .configure_series_labels()
-                .background_style(&WHITE.mix(0.8))
-                .border_style(&BLACK)
+                .background_style(WHITE.mix(0.8))
+                .border_style(BLACK)
                 .draw()
                 .unwrap();
 

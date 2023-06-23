@@ -54,20 +54,20 @@ impl From<(i32, i32)> for EguiBackendCoord {
     }
 }
 
-impl Into<Pos2> for EguiBackendCoord {
+impl From<EguiBackendCoord> for Pos2 {
     #[inline]
-    fn into(self) -> Pos2 {
+    fn from(val: EguiBackendCoord) -> Self {
         Pos2 {
-            x: self.x,
-            y: self.y,
+            x: val.x,
+            y: val.y,
         }
     }
 }
 
-impl Into<(u32, u32)> for EguiBackendCoord {
+impl From<EguiBackendCoord> for (u32, u32) {
     #[inline]
-    fn into(self) -> (u32, u32) {
-        (self.x as u32, self.y as u32)
+    fn from(val: EguiBackendCoord) -> Self {
+        (val.x as u32, val.y as u32)
     }
 }
 
@@ -86,12 +86,12 @@ impl Add<EguiBackendCoord> for EguiBackendCoord {
 
     #[inline]
     fn add(self, rhs: EguiBackendCoord) -> Self::Output {
-        let sum = Self {
+        
+
+        Self {
             x: self.x + rhs.x,
             y: self.y + rhs.y,
-        };
-
-        sum
+        }
     }
 }
 
@@ -100,12 +100,12 @@ impl Sub<EguiBackendCoord> for EguiBackendCoord {
 
     #[inline]
     fn sub(self, rhs: EguiBackendCoord) -> Self::Output {
-        let diff = Self {
+        
+
+        Self {
             x: self.x - rhs.x,
             y: self.y - rhs.y,
-        };
-
-        diff
+        }
     }
 }
 
@@ -114,12 +114,12 @@ impl Add<Pos2> for EguiBackendCoord {
 
     #[inline]
     fn add(self, rhs: Pos2) -> Self::Output {
-        let sum = Self {
+        
+
+        Self {
             x: self.x + rhs.x,
             y: self.y + rhs.y,
-        };
-
-        sum
+        }
     }
 }
 
@@ -128,12 +128,12 @@ impl Add<f32> for EguiBackendCoord {
 
     #[inline]
     fn add(self, rhs: f32) -> Self::Output {
-        let sum = Self {
+        
+
+        Self {
             x: self.x + rhs,
             y: self.y + rhs,
-        };
-
-        sum
+        }
     }
 }
 
@@ -178,10 +178,10 @@ impl From<BackendColor> for EguiBackendColor {
     }
 }
 
-impl Into<Color32> for EguiBackendColor {
+impl From<EguiBackendColor> for Color32 {
     #[inline]
-    fn into(self) -> Color32 {
-        Color32::from_rgba_unmultiplied(self.r, self.g, self.b, self.a)
+    fn from(val: EguiBackendColor) -> Self {
+        Color32::from_rgba_unmultiplied(val.r, val.g, val.b, val.a)
     }
 }
 
