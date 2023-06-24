@@ -46,6 +46,18 @@ pub struct Transform {
     pub y: i32,
 }
 
+impl Default for Transform {
+    fn default() -> Self {
+        Self {
+            pitch: 0.0,
+            yaw: 0.0,
+            scale: 1.0,
+            x: 0,
+            y: 0,
+        }
+    }
+}
+
 #[derive(Debug, Copy, Clone)]
 /// Mouse buttons that can be bound to chart actions
 pub enum MouseButton {
@@ -190,18 +202,6 @@ impl MouseConfig {
         self.set_pitch_scale(scale);
 
         self
-    }
-}
-
-impl Default for Transform {
-    fn default() -> Self {
-        Self {
-            pitch: 0.0,
-            yaw: 0.0,
-            scale: 1.0,
-            x: 0,
-            y: 0,
-        }
     }
 }
 
@@ -370,6 +370,11 @@ impl Chart {
                 transform.scale = (transform.scale + scale_delta as f64).abs();
             }
         });
+
+        let rect = ui.max_rect();
+
+        let width = rect.width();
+        let height = rect.height();
 
         let mut area = EguiBackend::new(ui)
             .offset((transform.x, transform.y))

@@ -13,21 +13,39 @@ use plotters::{
     series::LineSeries,
     style::{
         full_palette::{GREY, RED_900},
-        Color, FontDesc, ShapeStyle,
+        Color, FontDesc, RGBAColor, ShapeStyle, WHITE,
     },
 };
 use plotters_backend::{FontFamily, FontStyle};
 
-use crate::{Chart, MouseConfig};
+use crate::{mult_range, Chart, MouseConfig};
 
 const MIN_DELTA: f32 = 0.000_010;
+const DEFAULT_RATIO: f32 = 1.0;
+const X_MARGIN: i32 = 25;
+const Y_MARGIN: i32 = 25;
+const LABEL_AREA: i32 = 25;
+const CAPTION_SIZE: i32 = 10;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 struct XyTimeConfig {
+    /// Points to be plotted. A slice of X, Y f32 pairs.
     points: Arc<[(f32, f32)]>,
+    /// Ranges at different time points.
     range: (Range<f32>, Range<f32>),
+    /// Style of the plotted line.
+    line_style: ShapeStyle,
+    /// Style of the grid lines.
+    grid_style: ShapeStyle,
+    /// Background color of the chart.
+    background_color: RGBAColor,
+    /// Unit of the X axis.
     x_unit: Arc<str>,
+    /// Unit of the Y axis.
     y_unit: Arc<str>,
+    /// Ratio between the X and Y axis units.
+    ratio: f32,
+    /// Caption of the chart.
     caption: Arc<str>,
 }
 
@@ -125,11 +143,29 @@ impl XyTimeData {
         let y_unit: Arc<str> = y_unit.into();
         let caption: Arc<str> = caption.into();
 
+        let grid_style = ShapeStyle {
+            color: GREY.to_rgba(),
+            filled: false,
+            stroke_width: 1,
+        };
+
+        let line_style = ShapeStyle {
+            color: RED_900.to_rgba(),
+            filled: false,
+            stroke_width: 2,
+        };
+
+        let background_color = WHITE.to_rgba();
+
         let config = XyTimeConfig {
             points: points.clone(),
             range: ranges.last().unwrap().clone(),
+            line_style,
+            grid_style,
+            background_color,
             x_unit,
             y_unit,
+            ratio: DEFAULT_RATIO,
             caption,
         };
 
@@ -139,38 +175,65 @@ impl XyTimeData {
             .builder_cb(Box::new(|area, _t, data| {
                 let data: &XyTimeConfig = data.as_ref().unwrap().downcast_ref().unwrap();
 
+                let area_ratio = {
+                    let (x_range, y_range) = area.get_pixel_range();
+
+                    let x_delta =
+                        ((x_range.end - x_range.start).abs() - (X_MARGIN * 2) - LABEL_AREA) as f32;
+                    let y_delta = ((y_range.end - y_range.start).abs()
+                        - (Y_MARGIN * 2)
+                        - LABEL_AREA
+                        - CAPTION_SIZE) as f32;
+
+                    x_delta / y_delta
+                };
+
+                // Return if the ratio is invalid(meaning the chart can't be drawn)
+                if !area_ratio.is_finite() {
+                    return;
+                }
+
                 let (x_range, y_range) = data.range.clone();
+
+                // The data ratio is inverse, as if our X range is smaller we
+                // want to make sure the X axis is expanded to compensate
+                let data_ratio = {
+                    let x_delta = (x_range.end - x_range.start).abs();
+                    let y_delta = (y_range.end - y_range.start).abs();
+
+                    y_delta / x_delta
+                };
+
+                let display_ratio = data.ratio * data_ratio * area_ratio;
+
+                let (x_range, y_range) =
+                    match display_ratio.partial_cmp(&1.0).unwrap_or(Ordering::Equal) {
+                        Ordering::Equal => (x_range, y_range),
+                        Ordering::Greater => (mult_range(x_range, display_ratio), y_range),
+                        Ordering::Less => (x_range, mult_range(y_range, 1.0 / display_ratio)),
+                    };
 
                 let font_style = FontStyle::Normal;
                 let font_family = FontFamily::Monospace;
-                let font_size = 10;
+                let font_size = CAPTION_SIZE;
 
                 let font_desc = FontDesc::new(font_family, font_size as f64, font_style);
 
-                let grid_style = ShapeStyle {
-                    color: GREY.to_rgba(),
-                    filled: false,
-                    stroke_width: 1,
-                };
-
-                let line_style = ShapeStyle {
-                    color: RED_900.to_rgba(),
-                    filled: false,
-                    stroke_width: 2,
-                };
-
                 let mut chart = ChartBuilder::on(area)
-                    .margin(25)
                     .caption(data.caption.clone(), font_desc.clone())
-                    .x_label_area_size(25)
-                    .y_label_area_size(25)
+                    .x_label_area_size(LABEL_AREA)
+                    .y_label_area_size(LABEL_AREA)
+                    .margin_left(X_MARGIN)
+                    .margin_right(X_MARGIN)
+                    .margin_top(Y_MARGIN)
+                    .margin_bottom(Y_MARGIN)
                     .build_cartesian_2d(x_range, y_range)
                     .unwrap();
 
                 chart
                     .configure_mesh()
                     .label_style(font_desc.clone())
-                    .light_line_style(grid_style)
+                    .light_line_style(data.grid_style)
                     .x_desc(&data.x_unit.to_string())
                     .set_all_tick_mark_size(4)
                     .y_desc(&data.y_unit.to_string())
@@ -178,7 +241,7 @@ impl XyTimeData {
                     .unwrap();
 
                 chart
-                    .draw_series(LineSeries::new(data.points.to_vec(), line_style))
+                    .draw_series(LineSeries::new(data.points.to_vec(), data.line_style))
                     .unwrap();
             }));
 
@@ -230,6 +293,70 @@ impl XyTimeData {
     /// Set the playback speed. 1.0 is normal speed, 2.0 is double, & 0.5 is half. Consumes self.
     pub fn playback_speed(mut self, speed: f32) -> Self {
         self.set_playback_speed(speed);
+
+        self
+    }
+
+    #[inline]
+    /// Set the style of the plotted line.
+    pub fn set_line_style(&mut self, line_style: ShapeStyle) {
+        self.config.line_style = line_style
+    }
+
+    #[inline]
+    /// Set the style of the plotted line. Consumes self.
+    pub fn line_style(mut self, line_style: ShapeStyle) -> Self {
+        self.set_line_style(line_style);
+
+        self
+    }
+
+    #[inline]
+    /// Set the style of the grid.
+    pub fn set_grid_style(&mut self, grid_style: ShapeStyle) {
+        self.config.grid_style = grid_style
+    }
+
+    #[inline]
+    /// Set the style of the grid. Consumes self.
+    pub fn grid_style(mut self, grid_style: ShapeStyle) -> Self {
+        self.set_grid_style(grid_style);
+
+        self
+    }
+
+    #[inline]
+    /// Set the background color of the chart.
+    pub fn set_background_color<T>(&mut self, color: T)
+    where
+        T: Into<RGBAColor>,
+    {
+        let color: RGBAColor = color.into();
+
+        self.config.background_color = color;
+    }
+
+    #[inline]
+    /// Set the background color of the chart. Consumes self.
+    pub fn background_color<T>(mut self, color: T) -> Self
+    where
+        T: Into<RGBAColor>,
+    {
+        self.set_background_color(color);
+
+        self
+    }
+
+    #[inline]
+    /// Set the ratio between X and Y values, default being 1 x unit to 1 y unit.
+    pub fn set_ratio(&mut self, ratio: f32) {
+        self.config.ratio = ratio;
+    }
+
+    #[inline]
+    /// Set the ratio between X and Y values, default being 1 x unit to 1 y unit. Consumes self.
+    pub fn ratio(mut self, ratio: f32) -> Self {
+        self.set_ratio(ratio);
 
         self
     }
