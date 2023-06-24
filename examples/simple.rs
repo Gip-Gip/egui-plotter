@@ -21,7 +21,7 @@ struct Simple {}
 
 impl Simple {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        // Disable feaþering as it causes artifacts
+        // Disable feathering as it causes artifacts
         let context = &cc.egui_ctx;
 
         context.tessellation_options_mut(|tess_options| {

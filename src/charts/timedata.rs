@@ -13,7 +13,7 @@ use crate::charts::XyTimeData;
 /// 3 of which are just strings.
 ///
 ///  * `points`: A slice of tuples, arranged so that the first float is the time
-/// * and the second is the data.
+///  and the second is the data.
 ///  * `unit`: String describing the data on the Y axis.
 ///  * `caption`: String to be shown as the caption of the chart.
 ///
