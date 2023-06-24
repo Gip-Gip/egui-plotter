@@ -297,10 +297,11 @@ impl XyTimeData {
         self
     }
 
-    #[inline]
     /// Set the style of the plotted line.
     pub fn set_line_style(&mut self, line_style: ShapeStyle) {
-        self.config.line_style = line_style
+        self.config.line_style = line_style;
+
+        self.chart.set_data(Box::new(self.config.clone()))
     }
 
     #[inline]
@@ -314,7 +315,9 @@ impl XyTimeData {
     #[inline]
     /// Set the style of the grid.
     pub fn set_grid_style(&mut self, grid_style: ShapeStyle) {
-        self.config.grid_style = grid_style
+        self.config.grid_style = grid_style;
+
+        self.chart.set_data(Box::new(self.config.clone()))
     }
 
     #[inline]
@@ -334,6 +337,8 @@ impl XyTimeData {
         let color: RGBAColor = color.into();
 
         self.config.background_color = color;
+        
+        self.chart.set_data(Box::new(self.config.clone()))
     }
 
     #[inline]
@@ -364,6 +369,8 @@ impl XyTimeData {
     /// Draw the chart to a Ui. Will also proceed to animate the chart if playback is currently
     /// enabled.
     pub fn draw(&mut self, ui: &Ui) {
+        let mut current_config = self.config.clone();
+
         if let Some(_) = self.playback_start {
             let time = self.current_time();
 
@@ -384,8 +391,8 @@ impl XyTimeData {
             current_config.points = points.into();
             current_config.range = range;
 
-            self.chart.set_data(Box::new(current_config));
         }
+        self.chart.set_data(Box::new(current_config));
 
         self.chart.draw(ui);
     }

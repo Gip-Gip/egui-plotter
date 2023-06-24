@@ -5,6 +5,7 @@ use std::{f32::consts::PI, time::Duration};
 use eframe::egui::{self, CentralPanel, Visuals};
 use egui::{Key, Slider, TopBottomPanel};
 use egui_plotter::charts::XyTimeData;
+use plotters::style::{ShapeStyle, WHITE, full_palette::{GREY, GREY_50, GREY_700, GREY_900}};
 
 const SPIRAL_LEN: usize = 10;
 const SPIRAL_SUB: usize = 100;
@@ -14,16 +15,16 @@ fn main() {
     eframe::run_native(
         "Spiral Example",
         native_options,
-        Box::new(|cc| Box::new(TimeDataExample::new(cc))),
+        Box::new(|cc| Box::new(SprialExample::new(cc))),
     )
     .unwrap();
 }
 
-struct TimeDataExample {
+struct SprialExample {
     spiralchart: XyTimeData,
 }
 
-impl TimeDataExample {
+impl SprialExample {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
         // Disable feathering as it causes artifacts
         let context = &cc.egui_ctx;
@@ -33,7 +34,7 @@ impl TimeDataExample {
         });
 
         // Also enable light mode
-        context.set_visuals(Visuals::light());
+        context.set_visuals(Visuals::dark());
 
         let mut points: Vec<(f32, f32, f32)> = Vec::with_capacity(SPIRAL_LEN * SPIRAL_SUB);
 
@@ -51,13 +52,15 @@ impl TimeDataExample {
             rev += PI / SPIRAL_SUB as f32;
         }
 
-        let spiralchart = XyTimeData::new(&points, "", "", "");
+        let spiralchart = XyTimeData::new(&points, "", "", "")
+            .line_style(ShapeStyle { color: WHITE.into(), filled: false, stroke_width: 2 })
+            .grid_style(ShapeStyle { color: GREY_900.into(), filled: false, stroke_width: 1 });
 
         Self { spiralchart }
     }
 }
 
-impl eframe::App for TimeDataExample {
+impl eframe::App for SprialExample {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         TopBottomPanel::bottom("playmenu").show(ctx, |ui| {
             ui.horizontal(|ui| {
