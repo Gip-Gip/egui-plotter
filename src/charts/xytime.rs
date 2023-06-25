@@ -12,8 +12,8 @@ use plotters::{
     prelude::ChartBuilder,
     series::LineSeries,
     style::{
-        full_palette::{GREY, RED_900},
-        Color, FontDesc, RGBAColor, ShapeStyle, WHITE,
+        full_palette::{GREY, GREY_700, RED_900},
+        Color, FontDesc, RGBAColor, ShapeStyle, TextStyle, BLACK, WHITE,
     },
 };
 use plotters_backend::{FontFamily, FontStyle};
@@ -37,6 +37,12 @@ struct XyTimeConfig {
     line_style: ShapeStyle,
     /// Style of the grid lines.
     grid_style: ShapeStyle,
+    /// Style of the small grid lines.
+    subgrid_style: ShapeStyle,
+    /// Style of the axes.
+    axes_style: ShapeStyle,
+    /// Style of the text
+    text_color: RGBAColor,
     /// Background color of the chart.
     background_color: RGBAColor,
     /// Unit of the X axis.
@@ -146,7 +152,19 @@ impl XyTimeData {
         let grid_style = ShapeStyle {
             color: GREY.to_rgba(),
             filled: false,
+            stroke_width: 2,
+        };
+
+        let subgrid_style = ShapeStyle {
+            color: GREY_700.to_rgba(),
+            filled: false,
             stroke_width: 1,
+        };
+
+        let axes_style = ShapeStyle {
+            color: BLACK.to_rgba(),
+            filled: false,
+            stroke_width: 2,
         };
 
         let line_style = ShapeStyle {
@@ -156,12 +174,16 @@ impl XyTimeData {
         };
 
         let background_color = WHITE.to_rgba();
+        let text_color = BLACK.to_rgba();
 
         let config = XyTimeConfig {
             points: points.clone(),
             range: ranges.last().unwrap().clone(),
             line_style,
             grid_style,
+            subgrid_style,
+            axes_style,
+            text_color,
             background_color,
             x_unit,
             y_unit,
@@ -219,8 +241,10 @@ impl XyTimeData {
 
                 let font_desc = FontDesc::new(font_family, font_size as f64, font_style);
 
+                let text_style = TextStyle::from(font_desc).color(&data.text_color);
+
                 let mut chart = ChartBuilder::on(area)
-                    .caption(data.caption.clone(), font_desc.clone())
+                    .caption(data.caption.clone(), text_style.clone())
                     .x_label_area_size(LABEL_AREA)
                     .y_label_area_size(LABEL_AREA)
                     .margin_left(X_MARGIN)
@@ -232,8 +256,10 @@ impl XyTimeData {
 
                 chart
                     .configure_mesh()
-                    .label_style(font_desc.clone())
-                    .light_line_style(data.grid_style)
+                    .label_style(text_style.clone())
+                    .bold_line_style(data.grid_style)
+                    .light_line_style(data.subgrid_style)
+                    .axis_style(data.axes_style)
                     .x_desc(&data.x_unit.to_string())
                     .set_all_tick_mark_size(4)
                     .y_desc(&data.y_unit.to_string())
@@ -312,7 +338,6 @@ impl XyTimeData {
         self
     }
 
-    #[inline]
     /// Set the style of the grid.
     pub fn set_grid_style(&mut self, grid_style: ShapeStyle) {
         self.config.grid_style = grid_style;
@@ -328,7 +353,59 @@ impl XyTimeData {
         self
     }
 
+    /// Set the style of the subgrid.
+    pub fn set_subgrid_style(&mut self, subgrid_style: ShapeStyle) {
+        self.config.subgrid_style = subgrid_style;
+
+        self.chart.set_data(Box::new(self.config.clone()))
+    }
+
     #[inline]
+    /// Set the style of the subgrid. Consumes self.
+    pub fn subgrid_style(mut self, subgrid_style: ShapeStyle) -> Self {
+        self.set_subgrid_style(subgrid_style);
+
+        self
+    }
+
+    /// Set the style of the axes.
+    pub fn set_axes_style(&mut self, axes_style: ShapeStyle) {
+        self.config.axes_style = axes_style;
+
+        self.chart.set_data(Box::new(self.config.clone()))
+    }
+
+    #[inline]
+    /// Set the style of the plotted line. Consumes self.
+    pub fn axes_style(mut self, axes_style: ShapeStyle) -> Self {
+        self.set_axes_style(axes_style);
+
+        self
+    }
+
+    /// Set the text color of the chart.
+    pub fn set_text_color<T>(&mut self, color: T)
+    where
+        T: Into<RGBAColor>,
+    {
+        let color: RGBAColor = color.into();
+
+        self.config.text_color = color;
+
+        self.chart.set_data(Box::new(self.config.clone()))
+    }
+
+    #[inline]
+    /// Set the text color of the chart. Consumes self.
+    pub fn text_color<T>(mut self, color: T) -> Self
+    where
+        T: Into<RGBAColor>,
+    {
+        self.set_text_color(color);
+
+        self
+    }
+
     /// Set the background color of the chart.
     pub fn set_background_color<T>(&mut self, color: T)
     where
@@ -337,7 +414,7 @@ impl XyTimeData {
         let color: RGBAColor = color.into();
 
         self.config.background_color = color;
-        
+
         self.chart.set_data(Box::new(self.config.clone()))
     }
 
@@ -369,8 +446,6 @@ impl XyTimeData {
     /// Draw the chart to a Ui. Will also proceed to animate the chart if playback is currently
     /// enabled.
     pub fn draw(&mut self, ui: &Ui) {
-        let mut current_config = self.config.clone();
-
         if let Some(_) = self.playback_start {
             let time = self.current_time();
 
@@ -391,8 +466,8 @@ impl XyTimeData {
             current_config.points = points.into();
             current_config.range = range;
 
+            self.chart.set_data(Box::new(current_config));
         }
-        self.chart.set_data(Box::new(current_config));
 
         self.chart.draw(ui);
     }

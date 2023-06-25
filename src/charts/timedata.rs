@@ -94,6 +94,54 @@ impl TimeData {
     }
 
     #[inline]
+    /// Set the style of the subgrid.
+    pub fn set_subgrid_style(&mut self, subgrid_style: ShapeStyle) {
+        self.chart.set_subgrid_style(subgrid_style)
+    }
+
+    #[inline]
+    /// Set the style of the subgrid. Consumes self.
+    pub fn subgrid_style(mut self, subgrid_style: ShapeStyle) -> Self {
+        self.set_subgrid_style(subgrid_style);
+
+        self
+    }
+
+    #[inline]
+    /// Set the style of the axes.
+    pub fn set_axes_style(&mut self, axes_style: ShapeStyle) {
+        self.chart.set_axes_style(axes_style)
+    }
+
+    #[inline]
+    /// Set the style of the plotted line. Consumes self.
+    pub fn axes_style(mut self, axes_style: ShapeStyle) -> Self {
+        self.set_axes_style(axes_style);
+
+        self
+    }
+
+    #[inline]
+    /// Set the text color of the chart.
+    pub fn set_text_color<T>(&mut self, color: T)
+    where
+        T: Into<RGBAColor>,
+    {
+        self.chart.set_text_color(color)
+    }
+
+    #[inline]
+    /// Set the text color of the chart. Consumes self.
+    pub fn text_color<T>(mut self, color: T) -> Self
+    where
+        T: Into<RGBAColor>,
+    {
+        self.set_text_color(color);
+
+        self
+    }
+
+    #[inline]
     /// Set the background color of the chart.
     pub fn set_background_color<T>(&mut self, color: T)
     where

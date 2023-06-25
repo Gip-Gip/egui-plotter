@@ -5,7 +5,10 @@ use std::{f32::consts::PI, time::Duration};
 use eframe::egui::{self, CentralPanel, Visuals};
 use egui::{Key, Slider, TopBottomPanel};
 use egui_plotter::charts::XyTimeData;
-use plotters::style::{ShapeStyle, WHITE, full_palette::{GREY, GREY_50, GREY_700, GREY_900}};
+use plotters::style::{
+    full_palette::{GREY_700, GREY_900, ORANGE_50, TEAL_400},
+    ShapeStyle, TRANSPARENT, WHITE,
+};
 
 const SPIRAL_LEN: usize = 10;
 const SPIRAL_SUB: usize = 100;
@@ -53,8 +56,27 @@ impl SprialExample {
         }
 
         let spiralchart = XyTimeData::new(&points, "", "", "")
-            .line_style(ShapeStyle { color: WHITE.into(), filled: false, stroke_width: 2 })
-            .grid_style(ShapeStyle { color: GREY_900.into(), filled: false, stroke_width: 1 });
+            .line_style(ShapeStyle {
+                color: WHITE.into(),
+                filled: false,
+                stroke_width: 2,
+            })
+            .grid_style(ShapeStyle {
+                color: GREY_700.into(),
+                filled: false,
+                stroke_width: 2,
+            })
+            .subgrid_style(ShapeStyle {
+                color: GREY_900.into(),
+                filled: false,
+                stroke_width: 1,
+            })
+            .axes_style(ShapeStyle {
+                color: TEAL_400.into(),
+                filled: false,
+                stroke_width: 2,
+            })
+            .text_color(ORANGE_50);
 
         Self { spiralchart }
     }
