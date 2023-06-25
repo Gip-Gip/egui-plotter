@@ -57,7 +57,7 @@
 //!         // Also enable light mode
 //!         context.set_visuals(Visuals::light());
 //!
-//!         Self::default()
+//!         Self
 //!     }
 //! }
 //!
@@ -104,8 +104,7 @@
 //! user interactivity with your plotter charts.
 //!
 //! ```rust
-//! use eframe::egui::{self, CentralPanel, Visuals};
-//! use egui::Key;
+//! use eframe::egui::{self, CentralPanel, Key, Visuals};
 //! use egui_plotter::{Chart, MouseConfig};
 //! use plotters::prelude::*;
 //! use std::ops::Range;
@@ -121,7 +120,7 @@
 //! }
 //!
 //! struct ParaChart {
-//!     chart: Chart,
+//!     chart: Chart<(Range<f32>, Range<f32>)>,
 //! }
 //!
 //! impl ParaChart {
@@ -167,12 +166,12 @@
 //!                     ))
 //!                     .unwrap()
 //!                     .label("y = x^2")
-//!                     .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &RED));
+//!                     .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], RED));
 //!
 //!                 chart
 //!                     .configure_series_labels()
-//!                     .background_style(&WHITE.mix(0.8))
-//!                     .border_style(&BLACK)
+//!                     .background_style(WHITE.mix(0.8))
+//!                     .border_style(BLACK)
 //!                     .draw()
 //!                     .unwrap();
 //!             }));
@@ -187,14 +186,17 @@
 //!             // Press 1 for the range -1..1, 2 for -2..2, 3 for -3..3
 //!             ui.input(|input| {
 //!                 if input.key_down(Key::Num1) {
-//!                     self.chart.set_data(Box::new((-1f32..1f32, -0.5f32..1f32)));
+//!                     self.chart
+//!                         .set_data(|ranges| *ranges = (-1f32..1f32, -0.5f32..1f32));
 //!                 }
 //!                 if input.key_down(Key::Num2) {
-//!                     self.chart.set_data(Box::new((-2f32..2f32, -0.5f32..2f32)));
+//!                     self.chart
+//!                         .set_data(|ranges| *ranges = (-2f32..2f32, -0.5f32..2f32));
 //!                 }
 //!
 //!                 if input.key_down(Key::Num3) {
-//!                     self.chart.set_data(Box::new((-3f32..3f32, -0.5f32..3f32)));
+//!                     self.chart
+//!                         .set_data(|ranges| *ranges = (-3f32..3f32, -0.5f32..3f32));
 //!                 }
 //!             });
 //!
