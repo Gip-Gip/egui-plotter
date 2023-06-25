@@ -335,9 +335,7 @@ impl XyTimeData {
 
     /// Set the style of the grid.
     pub fn set_grid_style(&mut self, grid_style: ShapeStyle) {
-        self.chart.set_data(|config| {
-            config.grid_style = grid_style
-        })
+        self.chart.set_data(|config| config.grid_style = grid_style)
     }
 
     #[inline]
@@ -350,9 +348,8 @@ impl XyTimeData {
 
     /// Set the style of the subgrid.
     pub fn set_subgrid_style(&mut self, subgrid_style: ShapeStyle) {
-        self.chart.set_data(|config| {
-            config.subgrid_style = subgrid_style
-        })
+        self.chart
+            .set_data(|config| config.subgrid_style = subgrid_style)
     }
 
     #[inline]
@@ -365,9 +362,7 @@ impl XyTimeData {
 
     /// Set the style of the axes.
     pub fn set_axes_style(&mut self, axes_style: ShapeStyle) {
-        self.chart.set_data(|config| {
-            config.axes_style = axes_style
-        })
+        self.chart.set_data(|config| config.axes_style = axes_style)
     }
 
     #[inline]
@@ -385,9 +380,7 @@ impl XyTimeData {
     {
         let color: RGBAColor = color.into();
 
-        self.chart.set_data(|config| {
-            config.text_color = color
-        })
+        self.chart.set_data(|config| config.text_color = color)
     }
 
     #[inline]
@@ -408,9 +401,8 @@ impl XyTimeData {
     {
         let color: RGBAColor = color.into();
 
-        self.chart.set_data(|config| {
-            config.background_color = color
-        })
+        self.chart
+            .set_data(|config| config.background_color = color)
     }
 
     #[inline]
@@ -427,9 +419,7 @@ impl XyTimeData {
     #[inline]
     /// Set the ratio between X and Y values, default being 1 x unit to 1 y unit.
     pub fn set_ratio(&mut self, ratio: f32) {
-        self.chart.set_data(|config| {
-            config.ratio = ratio
-        })
+        self.chart.set_data(|config| config.ratio = ratio)
     }
 
     #[inline]
