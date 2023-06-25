@@ -24,7 +24,7 @@ struct Chart3d {
 
 impl Chart3d {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        // Disable feathering as it causes artifacts
+        // Disable feathring as it causes artifacts
         let context = &cc.egui_ctx;
 
         context.tessellation_options_mut(|tess_options| {

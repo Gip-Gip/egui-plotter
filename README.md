@@ -5,7 +5,8 @@
 [![APE](https://img.shields.io/badge/-APE-%2359118e)](https://openapeshop.org/)
 ## *simple to use utilties for integrating plotter into egui*
 
-![3d Graph Live Demo](https://github.com/Gip-Gip/egui-plotter/blob/91a86d3dfcd8f4f1207284030edcb637b2edc973/images/3d.gif?raw=true)
+[![3d Graph Live Demo](https://github.com/Gip-Gip/egui-plotter/blob/91a86d3dfcd8f4f1207284030edcb637b2edc973/images/3d.gif?raw=true)](https://github.com/Gip-Gip/egui-plotter/blob/main/examples/3d.rs)
+[![Spiral Live Demo](https://github.com/Gip-Gip/egui-plotter/blob/945886c8f6883b76955df3bce6e8bf2541cc5571/images/spiral.gif?raw=true)](https://github.com/Gip-Gip/egui-plotter/blob/main/examples/spiral.rs)
 
 ## Usage
 
@@ -14,7 +15,7 @@ project's `Cargo.toml`.
 
 ```toml
 [dependencies]
-egui-plotter = "0.2.0"
+egui-plotter = "0.3.0"
 ```
 
 **It is also heavily recommended you disable feathering in your egui context,
@@ -102,7 +103,8 @@ impl eframe::App for Simple {
 ### Charts
 
 Alternatively, the above example can be made with a Chart type to allow easy
-user interactivity with your plotter charts.
+user interactivity with your plotter charts. You can either make your own chart or
+use a prebuilt chart type included in the `charts` module.
 
 ```rust
 use eframe::egui::{self, CentralPanel, Key, Visuals};

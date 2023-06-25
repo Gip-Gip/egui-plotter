@@ -1,6 +1,6 @@
 [package]
 name = "egui-plotter"
-version = "0.2.1"
+version = "0.3.0"
 edition = "2021"
 authors = ["Charles Thompson"]
 license = "MIT"

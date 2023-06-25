@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.0
+
+ * Added premade charts
+    * Added TimeChart
+    * Added XyTimeChart
+
+## 0.2.1
+
+ * Fixed incompatablities with git version of egui
+
 ## 0.2.0
  * Added Chart type to allow for easier interactive charts.
  * Added examples for the Chart type.
