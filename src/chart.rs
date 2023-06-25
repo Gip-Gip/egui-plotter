@@ -321,7 +321,7 @@ impl<Data> Chart<Data> {
 
     #[inline]
     /// Set the data of the chart.
-    pub fn set_data<T>(&mut self, mut edit: impl FnMut(&mut Data) -> T) -> T {
+    pub fn set_data<T>(&mut self, edit: impl FnOnce(&mut Data) -> T) -> T {
         edit(&mut self.data)
     }
 
