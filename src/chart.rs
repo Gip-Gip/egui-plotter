@@ -314,13 +314,14 @@ impl<Data> Chart<Data> {
     }
 
     #[inline]
-    /// Get the data of the chart
-    pub fn data(&self) -> &Data {
+    /// Get the data of the chart.
+    pub fn get_data(&self) -> &Data {
         &self.data
     }
 
-    /// Set the data of the chart
-    pub fn set_data(&mut self, mut edit: impl FnMut(&mut Data)) {
+    #[inline]
+    /// Set the data of the chart.
+    pub fn set_data<T>(&mut self, mut edit: impl FnMut(&mut Data) -> T) -> T {
         edit(&mut self.data)
     }
 

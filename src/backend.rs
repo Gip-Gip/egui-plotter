@@ -57,10 +57,7 @@ impl From<(i32, i32)> for EguiBackendCoord {
 impl From<EguiBackendCoord> for Pos2 {
     #[inline]
     fn from(val: EguiBackendCoord) -> Self {
-        Pos2 {
-            x: val.x,
-            y: val.y,
-        }
+        Pos2 { x: val.x, y: val.y }
     }
 }
 
@@ -86,8 +83,6 @@ impl Add<EguiBackendCoord> for EguiBackendCoord {
 
     #[inline]
     fn add(self, rhs: EguiBackendCoord) -> Self::Output {
-        
-
         Self {
             x: self.x + rhs.x,
             y: self.y + rhs.y,
@@ -100,8 +95,6 @@ impl Sub<EguiBackendCoord> for EguiBackendCoord {
 
     #[inline]
     fn sub(self, rhs: EguiBackendCoord) -> Self::Output {
-        
-
         Self {
             x: self.x - rhs.x,
             y: self.y - rhs.y,
@@ -114,8 +107,6 @@ impl Add<Pos2> for EguiBackendCoord {
 
     #[inline]
     fn add(self, rhs: Pos2) -> Self::Output {
-        
-
         Self {
             x: self.x + rhs.x,
             y: self.y + rhs.y,
@@ -128,8 +119,6 @@ impl Add<f32> for EguiBackendCoord {
 
     #[inline]
     fn add(self, rhs: f32) -> Self::Output {
-        
-
         Self {
             x: self.x + rhs,
             y: self.y + rhs,
