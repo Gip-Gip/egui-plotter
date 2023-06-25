@@ -7,7 +7,7 @@ use egui::{Key, Slider, TopBottomPanel};
 use egui_plotter::charts::XyTimeData;
 use plotters::style::{
     full_palette::{GREY_700, GREY_900, ORANGE_50, TEAL_400},
-    ShapeStyle, TRANSPARENT, WHITE,
+    ShapeStyle, WHITE,
 };
 
 const SPIRAL_LEN: usize = 10;

@@ -371,11 +371,6 @@ impl Chart {
             }
         });
 
-        let rect = ui.max_rect();
-
-        let width = rect.width();
-        let height = rect.height();
-
         let mut area = EguiBackend::new(ui)
             .offset((transform.x, transform.y))
             .scale(transform.scale as f32)
