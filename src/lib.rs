@@ -188,17 +188,17 @@
 //!             // Press 1 for the range -1..1, 2 for -2..2, 3 for -3..3
 //!             ui.input(|input| {
 //!                 if input.key_down(Key::Num1) {
-//!                     self.chart
-//!                         .set_data(|ranges| *ranges = (-1f32..1f32, -0.5f32..1f32));
+//!                     *self.chart
+//!                         .get_data_mut() = (-1f32..1f32, -0.5f32..1f32);
 //!                 }
 //!                 if input.key_down(Key::Num2) {
-//!                     self.chart
-//!                         .set_data(|ranges| *ranges = (-2f32..2f32, -0.5f32..2f32));
+//!                     *self.chart
+//!                         .get_data_mut() = (-2f32..2f32, -0.5f32..2f32);
 //!                 }
 //!
 //!                 if input.key_down(Key::Num3) {
-//!                     self.chart
-//!                         .set_data(|ranges| *ranges = (-3f32..3f32, -0.5f32..3f32));
+//!                     *self.chart
+//!                         .get_data_mut() = (-3f32..3f32, -0.5f32..3f32);
 //!                 }
 //!             });
 //!

@@ -320,9 +320,7 @@ impl XyTimeData {
 
     /// Set the style of the plotted line.
     pub fn set_line_style(&mut self, line_style: ShapeStyle) {
-        self.chart.set_data(|config| {
-            config.line_style = line_style;
-        })
+        self.chart.get_data_mut().line_style = line_style;
     }
 
     #[inline]
@@ -335,7 +333,7 @@ impl XyTimeData {
 
     /// Set the style of the grid.
     pub fn set_grid_style(&mut self, grid_style: ShapeStyle) {
-        self.chart.set_data(|config| config.grid_style = grid_style)
+        self.chart.get_data_mut().grid_style = grid_style
     }
 
     #[inline]
@@ -348,8 +346,7 @@ impl XyTimeData {
 
     /// Set the style of the subgrid.
     pub fn set_subgrid_style(&mut self, subgrid_style: ShapeStyle) {
-        self.chart
-            .set_data(|config| config.subgrid_style = subgrid_style)
+        self.chart.get_data_mut().subgrid_style = subgrid_style
     }
 
     #[inline]
@@ -362,7 +359,7 @@ impl XyTimeData {
 
     /// Set the style of the axes.
     pub fn set_axes_style(&mut self, axes_style: ShapeStyle) {
-        self.chart.set_data(|config| config.axes_style = axes_style)
+        self.chart.get_data_mut().axes_style = axes_style
     }
 
     #[inline]
@@ -380,7 +377,7 @@ impl XyTimeData {
     {
         let color: RGBAColor = color.into();
 
-        self.chart.set_data(|config| config.text_color = color)
+        self.chart.get_data_mut().text_color = color
     }
 
     #[inline]
@@ -401,8 +398,7 @@ impl XyTimeData {
     {
         let color: RGBAColor = color.into();
 
-        self.chart
-            .set_data(|config| config.background_color = color)
+        self.chart.get_data_mut().background_color = color
     }
 
     #[inline]
@@ -419,7 +415,7 @@ impl XyTimeData {
     #[inline]
     /// Set the ratio between X and Y values, default being 1 x unit to 1 y unit.
     pub fn set_ratio(&mut self, ratio: f32) {
-        self.chart.set_data(|config| config.ratio = ratio)
+        self.chart.get_data_mut().ratio = ratio
     }
 
     #[inline]
@@ -448,10 +444,9 @@ impl XyTimeData {
             let points = &self.points[..=time_index];
             let range = self.ranges[time_index].clone();
 
-            self.chart.set_data(|config| {
-                config.points = points.into();
-                config.range = range;
-            });
+            let config = self.chart.get_data_mut();
+            config.points = points.into();
+            config.range = range;
         }
 
         self.chart.draw(ui);

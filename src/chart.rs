@@ -320,9 +320,9 @@ impl<Data> Chart<Data> {
     }
 
     #[inline]
-    /// Set the data of the chart.
-    pub fn set_data<T>(&mut self, edit: impl FnOnce(&mut Data) -> T) -> T {
-        edit(&mut self.data)
+    /// Get the data of the chart.
+    pub fn get_data_mut(&mut self) -> &mut Data {
+        &mut self.data
     }
 
     /// Call the callback and draw the chart to a UI element.
