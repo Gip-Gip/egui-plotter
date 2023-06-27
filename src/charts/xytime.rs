@@ -1,13 +1,9 @@
 //! Animatable line chart. Can have X and Y points.
 
-use std::{
-    cmp::Ordering,
-    ops::Range,
-    sync::Arc,
-    time::{Duration, Instant},
-};
+use std::{cmp::Ordering, ops::Range, sync::Arc, time::Duration};
 
 use egui::Ui;
+use instant::Instant;
 use plotters::{
     prelude::ChartBuilder,
     series::LineSeries,
