@@ -6,69 +6,69 @@
 ## *simple to use utilties for integrating plotter into egui*
 
 [![3d Graph Live Demo](https://github.com/Gip-Gip/egui-plotter/blob/91a86d3dfcd8f4f1207284030edcb637b2edc973/images/3d.gif?raw=true)](https://github.com/Gip-Gip/egui-plotter/blob/main/examples/3d.rs)
-[![spiral live demo](https://github.com/gip-gip/egui-plotter/blob/945886c8f6883b76955df3bce6e8bf2541cc5571/images/spiral.gif?raw=true)](https://github.com/gip-gip/egui-plotter/blob/main/examples/spiral.rs)
+[![Spiral Live Demo](https://github.com/Gip-Gip/egui-plotter/blob/945886c8f6883b76955df3bce6e8bf2541cc5571/images/spiral.gif?raw=true)](https://github.com/Gip-Gip/egui-plotter/blob/main/examples/spiral.rs)
 
-## usage
+## Usage
 
-this crate can be used by adding `egui-plotter` to the dependencies in your
-project's `cargo.toml`.
+This crate can be used by adding `egui-plotter` to the dependencies in your
+project's `Cargo.toml`.
 
 ```toml
 [dependencies]
 egui-plotter = "0.3.0"
 ```
 
-**it is also heavily recommended you disable feathering in your egui context,
+**It is also heavily recommended you disable feathering in your egui context,
 as not only does it slow things down but it causes artifacts with certain plots.**
 
-see line 24 example below to see how to disable feathering.
+See line 24 example below to see how to disable feathering.
 
-## examples
+## Examples
 
-here's a simple plotter example being run on native eframe.
-derived from
+Here's a simple plotter example being run on native eframe.
+Derived from
 [eframe](https://docs.rs/eframe/0.22.0/eframe/index.html#usage-native) and
 [plotters](https://docs.rs/plotters/0.3.4/plotters/index.html#quick-start).
 
 ```rust
-use eframe::egui::{self, centralpanel, visuals};
-use egui_plotter::eguibackend;
+use eframe::egui::{self, CentralPanel, Visuals};
+use egui_plotter::EguiBackend;
 use plotters::prelude::*;
 
 fn main() {
-    let native_options = eframe::nativeoptions::default();
+    let native_options = eframe::NativeOptions::default();
     eframe::run_native(
-        "simple example",
+        "Simple Example",
         native_options,
-        box::new(|cc| box::new(simple::new(cc))),
+        Box::new(|cc| Box::new(Simple::new(cc))),
     )
     .unwrap();
 }
 
-struct simple;
+struct Simple;
 
-impl simple {
-    fn new(cc: &eframe::creationcontext<'_>) -> self {
-        // disable feathering as it causes artifacts
+impl Simple {
+    fn new(cc: &eframe::CreationContext<'_>) -> Self {
+        // Disable feathering as it causes artifacts
         let context = &cc.egui_ctx;
 
         context.tessellation_options_mut(|tess_options| {
             tess_options.feathering = false;
         });
 
-        // also enable light mode
-        context.set_visuals(visuals::light());
+        // Also enable light mode
+        context.set_visuals(Visuals::light());
 
-        self
+        Self
     }
 }
 
-impl eframe::app for simple {
-    fn update(&mut self, ctx: &egui::context, _frame: &mut eframe::frame) {
-        centralpanel::default().show(ctx, |ui| {
-            let root = eguibackend::new(ui).into_drawing_area();
-            root.fill(&white).unwrap();
-            let mut chart = chartbuilder::on(&root)
+impl eframe::App for Simple {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        CentralPanel::default().show(ctx, |ui| {
+            let root = EguiBackend::new(ui).into_drawing_area();
+            root.fill(&WHITE).unwrap();
+            let mut chart = ChartBuilder::on(&root)
                 .caption("y=x^2", ("sans-serif", 50).into_font())
                 .margin(5)
                 .x_label_area_size(30)
@@ -79,18 +79,18 @@ impl eframe::app for simple {
             chart.configure_mesh().draw().unwrap();
 
             chart
-                .draw_series(lineseries::new(
+                .draw_series(LineSeries::new(
                     (-50..=50).map(|x| x as f32 / 50.0).map(|x| (x, x * x)),
-                    &red,
+                    &RED,
                 ))
                 .unwrap()
                 .label("y = x^2")
-                .legend(|(x, y)| pathelement::new(vec![(x, y), (x + 20, y)], &red));
+                .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &RED));
 
             chart
                 .configure_series_labels()
-                .background_style(&white.mix(0.8))
-                .border_style(&black)
+                .background_style(&WHITE.mix(0.8))
+                .border_style(&BLACK)
                 .draw()
                 .unwrap();
 
@@ -100,57 +100,57 @@ impl eframe::app for simple {
 }
 ```
 
-### charts
+### Charts
 
-alternatively, the above example can be made with a chart type to allow easy
-user interactivity with your plotter charts. you can either make your own chart or
+Alternatively, the above example can be made with a Chart type to allow easy
+user interactivity with your plotter charts. You can either make your own chart or
 use a prebuilt chart type included in the `charts` module.
 
 ```rust
-use eframe::egui::{self, centralpanel, key, visuals};
-use egui_plotter::{chart, mouseconfig};
+use eframe::egui::{self, CentralPanel, Key, Visuals};
+use egui_plotter::{Chart, MouseConfig};
 use plotters::prelude::*;
-use std::ops::range;
+use std::ops::Range;
 
 fn main() {
-    let native_options = eframe::nativeoptions::default();
+    let native_options = eframe::NativeOptions::default();
     eframe::run_native(
-        "parachart example",
+        "ParaChart Example",
         native_options,
-        box::new(|cc| box::new(parachart::new(cc))),
+        Box::new(|cc| Box::new(ParaChart::new(cc))),
     )
     .unwrap();
 }
 
-struct parachart {
-    chart: chart<(range<f32>, range<f32>)>,
+struct ParaChart {
+    chart: Chart<(Range<f32>, Range<f32>)>,
 }
 
-impl parachart {
-    fn new(cc: &eframe::creationcontext<'_>) -> self {
-        // disable feathering as it causes artifacts
+impl ParaChart {
+    fn new(cc: &eframe::CreationContext<'_>) -> Self {
+        // Disable feathering as it causes artifacts
         let context = &cc.egui_ctx;
 
         context.tessellation_options_mut(|tess_options| {
             tess_options.feathering = false;
         });
 
-        // also enable light mode
-        context.set_visuals(visuals::light());
+        // Also enable light mode
+        context.set_visuals(Visuals::light());
 
-        // we use data to adjust the range of the chart. this can be useful for
-        // line plots where the x represents time and we want to play through
-        // the x, but that is not what we are using it for here
-        let chart = chart::new((-3f32..3f32, -0.5f32..3f32))
-            .mouse(mouseconfig::enabled())
-            .builder_cb(box::new(|area, _t, ranges| {
-                // build a chart like you would in any other plotter chart.
-                // the drawing area and ranges are provided by the callback,
+        // We use data to adjust the range of the chart. This can be useful for
+        // line plots where the X represents time and we want to play through
+        // the X, but that is not what we are using it for here
+        let chart = Chart::new((-3f32..3f32, -0.5f32..3f32))
+            .mouse(MouseConfig::enabled())
+            .builder_cb(Box::new(|area, _t, ranges| {
+                // Build a chart like you would in any other plotter chart.
+                // The drawing area and ranges are provided by the callback,
                 // but otherwise everything else is the same.
 
                 let (x_range, y_range) = ranges;
 
-                let mut chart = chartbuilder::on(area)
+                let mut chart = ChartBuilder::on(area)
                     .caption("y=x^2", ("sans-serif", 50).into_font())
                     .margin(5)
                     .x_label_area_size(30)
@@ -161,25 +161,25 @@ impl parachart {
                 chart.configure_mesh().draw().unwrap();
 
                 chart
-                    .draw_series(lineseries::new(
+                    .draw_series(LineSeries::new(
                         (-50 * (x_range.end as i32)..=(50 * x_range.end as i32))
                             .map(|x| x as f32 / 50.0)
                             .map(|x| (x, x * x)),
-                        &red,
+                        &RED,
                     ))
                     .unwrap()
                     .label("y = x^2")
-                    .legend(|(x, y)| pathelement::new(vec![(x, y), (x + 20, y)], red));
+                    .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], RED));
 
                 chart
                     .configure_series_labels()
-                    .background_style(white.mix(0.8))
-                    .border_style(black)
+                    .background_style(WHITE.mix(0.8))
+                    .border_style(BLACK)
                     .draw()
                     .unwrap();
             }));
 
-        self { chart }
+        Self { chart }
     }
 }
 

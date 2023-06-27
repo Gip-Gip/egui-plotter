@@ -314,13 +314,13 @@ impl<Data> Chart<Data> {
     }
 
     #[inline]
-    /// Get the data of the chart.
+    /// Get the data of the chart as a reference.
     pub fn get_data(&self) -> &Data {
         &self.data
     }
 
     #[inline]
-    /// Get the data of the chart.
+    /// Get the data of the chart as a mutable reference.
     pub fn get_data_mut(&mut self) -> &mut Data {
         &mut self.data
     }
