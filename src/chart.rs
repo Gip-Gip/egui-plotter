@@ -1,7 +1,5 @@
 //! Structs used to simplify the process of making interactive charts
 
-use std::any::Any;
-
 use egui::{PointerState, Ui};
 use plotters::{
     coord::Shift,
@@ -221,23 +219,21 @@ impl MouseConfig {
 ///
 ///  ## Examples
 ///  See `examples/3dchart.rs` and `examples/parachart.rs` for examples of usage.
-pub struct Chart {
+pub struct Chart<Data> {
     transform: Transform,
     mouse: MouseConfig,
-    builder_cb: Option<
-        Box<dyn FnMut(&mut DrawingArea<EguiBackend, Shift>, &Transform, &Option<Box<dyn Any>>)>,
-    >,
-    data: Option<Box<dyn Any>>,
+    builder_cb: Option<Box<dyn FnMut(&mut DrawingArea<EguiBackend, Shift>, &Transform, &Data)>>,
+    data: Data,
 }
 
-impl Chart {
-    /// Create a new 3d chart with default settings.
-    pub fn new() -> Self {
+impl<Data> Chart<Data> {
+    /// Create a new chart with default settings (if not using data supply ())
+    pub fn new(data: Data) -> Self {
         Self {
             transform: Transform::default(),
             mouse: MouseConfig::default(),
             builder_cb: None,
-            data: None,
+            data,
         }
     }
 
@@ -259,9 +255,7 @@ impl Chart {
     /// Set the builder callback.
     pub fn set_builder_cb(
         &mut self,
-        builder_cb: Box<
-            dyn FnMut(&mut DrawingArea<EguiBackend, Shift>, &Transform, &Option<Box<dyn Any>>),
-        >,
+        builder_cb: Box<dyn FnMut(&mut DrawingArea<EguiBackend, Shift>, &Transform, &Data)>,
     ) {
         self.builder_cb = Some(builder_cb)
     }
@@ -270,9 +264,7 @@ impl Chart {
     /// Set the builder callback. Consumes self.
     pub fn builder_cb(
         mut self,
-        builder_cb: Box<
-            dyn FnMut(&mut DrawingArea<EguiBackend, Shift>, &Transform, &Option<Box<dyn Any>>),
-        >,
+        builder_cb: Box<dyn FnMut(&mut DrawingArea<EguiBackend, Shift>, &Transform, &Data)>,
     ) -> Self {
         self.set_builder_cb(builder_cb);
 
@@ -322,17 +314,15 @@ impl Chart {
     }
 
     #[inline]
-    /// Set the data of the chart.
-    pub fn set_data(&mut self, data: Box<dyn Any>) {
-        self.data = Some(data)
+    /// Get the data of the chart as a reference.
+    pub fn get_data(&self) -> &Data {
+        &self.data
     }
 
     #[inline]
-    /// Set the data of the chart. Consumes self.
-    pub fn data(mut self, data: Box<dyn Any>) -> Self {
-        self.set_data(data);
-
-        self
+    /// Get the data of the chart as a mutable reference.
+    pub fn get_data_mut(&mut self) -> &mut Data {
+        &mut self.data
     }
 
     /// Call the callback and draw the chart to a UI element.
@@ -376,12 +366,8 @@ impl Chart {
             .scale(transform.scale as f32)
             .into_drawing_area();
 
-        match &mut self.builder_cb {
-            Some(cb) => {
-                cb(&mut area, transform, &self.data);
-            }
-
-            None => {}
+        if let Some(cb) = &mut self.builder_cb {
+            cb(&mut area, transform, &self.data);
         }
 
         area.present().unwrap();

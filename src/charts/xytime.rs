@@ -73,14 +73,13 @@ struct XyTimeConfig {
 /// add to your egui project. You can also animate this chart with `.toggle_playback()`
 /// and adjust various parameters with the many `.set_` functions included.
 pub struct XyTimeData {
-    config: XyTimeConfig,
     playback_start: Option<Instant>,
     pause_start: Option<Instant>,
     playback_speed: f32,
     points: Arc<[(f32, f32)]>,
     ranges: Arc<[(Range<f32>, Range<f32>)]>,
     times: Arc<[f32]>,
-    chart: Chart,
+    chart: Chart<XyTimeConfig>,
 }
 
 impl XyTimeData {
@@ -191,12 +190,9 @@ impl XyTimeData {
             caption,
         };
 
-        let chart = Chart::new()
+        let chart = Chart::new(config)
             .mouse(MouseConfig::enabled())
-            .data(Box::new(config.clone()))
             .builder_cb(Box::new(|area, _t, data| {
-                let data: &XyTimeConfig = data.as_ref().unwrap().downcast_ref().unwrap();
-
                 let area_ratio = {
                     let (x_range, y_range) = area.get_pixel_range();
 
@@ -272,7 +268,6 @@ impl XyTimeData {
             }));
 
         Self {
-            config,
             playback_start: None,
             pause_start: None,
             playback_speed: 1.0,
@@ -325,9 +320,7 @@ impl XyTimeData {
 
     /// Set the style of the plotted line.
     pub fn set_line_style(&mut self, line_style: ShapeStyle) {
-        self.config.line_style = line_style;
-
-        self.chart.set_data(Box::new(self.config.clone()))
+        self.chart.get_data_mut().line_style = line_style;
     }
 
     #[inline]
@@ -340,9 +333,7 @@ impl XyTimeData {
 
     /// Set the style of the grid.
     pub fn set_grid_style(&mut self, grid_style: ShapeStyle) {
-        self.config.grid_style = grid_style;
-
-        self.chart.set_data(Box::new(self.config.clone()))
+        self.chart.get_data_mut().grid_style = grid_style
     }
 
     #[inline]
@@ -355,9 +346,7 @@ impl XyTimeData {
 
     /// Set the style of the subgrid.
     pub fn set_subgrid_style(&mut self, subgrid_style: ShapeStyle) {
-        self.config.subgrid_style = subgrid_style;
-
-        self.chart.set_data(Box::new(self.config.clone()))
+        self.chart.get_data_mut().subgrid_style = subgrid_style
     }
 
     #[inline]
@@ -370,9 +359,7 @@ impl XyTimeData {
 
     /// Set the style of the axes.
     pub fn set_axes_style(&mut self, axes_style: ShapeStyle) {
-        self.config.axes_style = axes_style;
-
-        self.chart.set_data(Box::new(self.config.clone()))
+        self.chart.get_data_mut().axes_style = axes_style
     }
 
     #[inline]
@@ -390,9 +377,7 @@ impl XyTimeData {
     {
         let color: RGBAColor = color.into();
 
-        self.config.text_color = color;
-
-        self.chart.set_data(Box::new(self.config.clone()))
+        self.chart.get_data_mut().text_color = color
     }
 
     #[inline]
@@ -413,9 +398,7 @@ impl XyTimeData {
     {
         let color: RGBAColor = color.into();
 
-        self.config.background_color = color;
-
-        self.chart.set_data(Box::new(self.config.clone()))
+        self.chart.get_data_mut().background_color = color
     }
 
     #[inline]
@@ -432,7 +415,7 @@ impl XyTimeData {
     #[inline]
     /// Set the ratio between X and Y values, default being 1 x unit to 1 y unit.
     pub fn set_ratio(&mut self, ratio: f32) {
-        self.config.ratio = ratio;
+        self.chart.get_data_mut().ratio = ratio
     }
 
     #[inline]
@@ -461,12 +444,9 @@ impl XyTimeData {
             let points = &self.points[..=time_index];
             let range = self.ranges[time_index].clone();
 
-            let mut current_config = self.config.clone();
-
-            current_config.points = points.into();
-            current_config.range = range;
-
-            self.chart.set_data(Box::new(current_config));
+            let config = self.chart.get_data_mut();
+            config.points = points.into();
+            config.range = range;
         }
 
         self.chart.draw(ui);

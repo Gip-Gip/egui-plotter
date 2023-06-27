@@ -45,8 +45,7 @@ fn main() {
     .unwrap();
 }
 
-#[derive(Default)]
-struct Simple {}
+struct Simple;
 
 impl Simple {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
@@ -60,7 +59,7 @@ impl Simple {
         // Also enable light mode
         context.set_visuals(Visuals::light());
 
-        Self::default()
+        Self
     }
 }
 
@@ -108,8 +107,7 @@ user interactivity with your plotter charts. You can either make your own chart 
 use a prebuilt chart type included in the `charts` module.
 
 ```rust
-use eframe::egui::{self, CentralPanel, Visuals};
-use egui::Key;
+use eframe::egui::{self, CentralPanel, Key, Visuals};
 use egui_plotter::{Chart, MouseConfig};
 use plotters::prelude::*;
 use std::ops::Range;
@@ -125,7 +123,7 @@ fn main() {
 }
 
 struct ParaChart {
-    chart: Chart,
+    chart: Chart<(Range<f32>, Range<f32>)>,
 }
 
 impl ParaChart {
@@ -143,15 +141,12 @@ impl ParaChart {
         // We use data to adjust the range of the chart. This can be useful for
         // line plots where the X represents time and we want to play through
         // the X, but that is not what we are using it for here
-        let chart = Chart::new()
+        let chart = Chart::new((-3f32..3f32, -0.5f32..3f32))
             .mouse(MouseConfig::enabled())
-            .data(Box::new((-3f32..3f32, -0.5f32..3f32)))
             .builder_cb(Box::new(|area, _t, ranges| {
                 // Build a chart like you would in any other plotter chart.
                 // The drawing area and ranges are provided by the callback,
                 // but otherwise everything else is the same.
-                let ranges: &(Range<f32>, Range<f32>) =
-                    ranges.as_ref().unwrap().downcast_ref().unwrap();
 
                 let (x_range, y_range) = ranges;
 
@@ -174,12 +169,12 @@ impl ParaChart {
                     ))
                     .unwrap()
                     .label("y = x^2")
-                    .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &RED));
+                    .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], RED));
 
                 chart
                     .configure_series_labels()
-                    .background_style(&WHITE.mix(0.8))
-                    .border_style(&BLACK)
+                    .background_style(WHITE.mix(0.8))
+                    .border_style(BLACK)
                     .draw()
                     .unwrap();
             }));
@@ -194,14 +189,17 @@ impl eframe::App for ParaChart {
             // Press 1 for the range -1..1, 2 for -2..2, 3 for -3..3
             ui.input(|input| {
                 if input.key_down(Key::Num1) {
-                    self.chart.set_data(Box::new((-1f32..1f32, -0.5f32..1f32)));
+                    *self.chart
+                        .get_data_mut() = (-1f32..1f32, -0.5f32..1f32);
                 }
                 if input.key_down(Key::Num2) {
-                    self.chart.set_data(Box::new((-2f32..2f32, -0.5f32..2f32)));
+                    *self.chart
+                        .get_data_mut() = (-2f32..2f32, -0.5f32..2f32);
                 }
 
                 if input.key_down(Key::Num3) {
-                    self.chart.set_data(Box::new((-3f32..3f32, -0.5f32..3f32)));
+                    *self.chart
+                        .get_data_mut() = (-3f32..3f32, -0.5f32..3f32);
                 }
             });
 

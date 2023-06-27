@@ -19,7 +19,7 @@ fn main() {
 }
 
 struct Chart3d {
-    chart: Chart,
+    chart: Chart<()>,
 }
 
 impl Chart3d {
@@ -35,7 +35,7 @@ impl Chart3d {
         context.set_visuals(Visuals::light());
 
         // Create a new 3d chart with all mouse controls enabled and the chart slightly angled
-        let chart = Chart::new()
+        let chart = Chart::new(())
             .mouse(MouseConfig::enabled())
             .pitch(0.7)
             .yaw(0.7)
@@ -48,7 +48,7 @@ impl Chart3d {
 
                 let mut chart = ChartBuilder::on(area)
                     .caption(format!("3D Plot Test"), (FontFamily::SansSerif, 20))
-                    .build_cartesian_3d(x_axis.clone(), -3.0..3.0, z_axis.clone())
+                    .build_cartesian_3d(x_axis, -3.0..3.0, z_axis)
                     .unwrap();
 
                 chart.with_projection(|mut pb| {
@@ -89,11 +89,11 @@ impl Chart3d {
                     ))
                     .unwrap()
                     .label("Line")
-                    .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &BLACK));
+                    .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], BLACK));
 
                 chart
                     .configure_series_labels()
-                    .border_style(&BLACK)
+                    .border_style(BLACK)
                     .draw()
                     .unwrap();
             }));
