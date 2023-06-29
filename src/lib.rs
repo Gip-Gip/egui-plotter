@@ -22,6 +22,10 @@
 //!
 //! See line 24 example below to see how to disable feathering.
 //!
+//! ### Features
+//!
+//!  * `timechart` - Includes all the pre-made animatable charts like XyTimeData and TimeData.
+//!
 //! ## Examples
 //!
 //! Here's a simple plotter example being run on native eframe.
@@ -217,8 +221,10 @@ pub use chart::{
     Chart, MouseButton, MouseConfig, Transform, DEFAULT_MOVE_SCALE, DEFAULT_SCROLL_SCALE,
 };
 
+#[cfg(feature = "timechart")]
 use std::ops::Range;
 
+#[cfg(feature = "timechart")]
 fn mult_range(range: Range<f32>, mult: f32) -> Range<f32> {
     let delta = range.end - range.start;
 

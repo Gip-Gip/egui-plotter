@@ -13,13 +13,28 @@ exclude = [
     "images"
 ]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[features]
+timechart = ["dep:instant"]
 
 [dependencies]
-egui = "0.22.0" 
-plotters-backend = "0.3.4"
-plotters = "0.3.1"
+egui = "0.22" 
+plotters-backend = "0.3"
+plotters = "0.3"
+# if you are using egui then chances are you're using trunk which uses wasm bindgen
+instant = { version = "0.1", features = ["wasm-bindgen"], optional = true }
 
 [dev-dependencies]
 eframe = "0.22.0"
+# Hacky way to enable features during testing
+egui-plotter = { path = ".", version = "0.3.0", features = ["timechart"]}
 
+[package.metadata.docs.rs]
+features = ["timechart"]
+
+[[example]]
+name = "spiral"
+required-features = ["timechart"]
+
+[[example]]
+name = "timechart"
+required-features = ["timechart"]

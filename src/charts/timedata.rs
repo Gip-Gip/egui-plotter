@@ -5,9 +5,10 @@ use plotters::style::{RGBAColor, ShapeStyle};
 
 use crate::charts::XyTimeData;
 
-/// Animatabe chart with time on the X axis and data on the Y axis.
+/// Animatable chart with time on the X axis and data on the Y axis.
 ///
 /// ## Usage
+/// **Ensure the `timechart` feature is enabled to use this type.**
 ///
 /// Creating the chart is very simple. You only need to provide 4 parameters,
 /// 3 of which are just strings.
