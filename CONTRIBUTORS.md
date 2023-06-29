@@ -4,5 +4,5 @@
  * [bananaturtlesandwich](https://github.com/bananaturtlesandwich)
  * [Charles Thompson, aka. Gip-Gip](https://github.com/Gip-Gip)
 
-### List is in alphabetical order.
-### In the chance you wish to be called something else, please contact the maintainer of this project.
+#### List is in alphabetical order.
+#### In the chance you wish to be called something else, please contact the maintainer of this project.
