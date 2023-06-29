@@ -22,6 +22,10 @@
 //!
 //! See line 24 example below to see how to disable feathering.
 //!
+//! ### Features
+//!
+//!  * `timechart` - Includes all the pre-made animatable charts like XyTimeData and TimeData.
+//!
 //! ## Examples
 //!
 //! Here's a simple plotter example being run on native eframe.
