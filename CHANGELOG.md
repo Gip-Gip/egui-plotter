@@ -1,5 +1,15 @@
 # Changelog
 
+## Breaking Changes & Fixes
+
+### 0.3.0 -> 0.4.0
+
+ * `XyTimeData` and `TimeData` are now locked behind the feature `timechart`.
+    * Specify feature `timechart` when including in your Cargo.toml to use these built in charts.
+ * `Chart` type now generic and mutable
+    * Specify chart data type when initializing, or if it has none create a `Chart::<()>::new()`
+    * Accessing the chart's data no longer requires a `.downcast` and is directly accessable
+
 ## 0.3.0
 
  * Added premade charts
