@@ -54,6 +54,7 @@ struct XyTimeConfig {
 /// Animatable 2d line chart.
 ///
 /// ## Usage
+/// **Ensure the `timechart` feature is enabled to use this type.**
 ///
 /// Creating the chart is very simple. You only need to provide 4 parameters,
 /// 3 of which are just strings.
