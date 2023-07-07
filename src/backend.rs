@@ -5,10 +5,11 @@ use std::fmt::{Display, Formatter, Result as FmtResult};
 use std::ops::{Add, AddAssign, MulAssign, Sub, SubAssign};
 
 use egui::{
-    epaint::PathShape, Align2, Color32, FontFamily as EguiFontFamily, FontId, Pos2, Rect, Stroke,
-    Ui,
+    epaint::PathShape, Align, Align2, Color32, FontFamily as EguiFontFamily, FontId, Pos2, Rect,
+    Stroke, Ui,
 };
 use plotters_backend::{
+    text_anchor::{HPos, Pos, VPos},
     BackendColor, BackendCoord, BackendStyle, BackendTextStyle, DrawingBackend, DrawingErrorKind,
     FontFamily as PlottersFontFamily,
 };
@@ -16,9 +17,7 @@ use plotters_backend::{
 #[derive(Debug, Clone, Copy)]
 /// Error to be returned by the backend. Since egui doesn't return any errors
 /// on any painter operations, this is a stub type.
-pub enum EguiBackendError {
-    None,
-}
+pub struct EguiBackendError;
 
 impl Display for EguiBackendError {
     #[inline]
@@ -322,7 +321,21 @@ impl<'a> DrawingBackend for EguiBackend<'a> {
 
         let color: Color32 = EguiBackendColor::from(style.color()).into();
 
-        painter.text(pos.into(), Align2::LEFT_TOP, text, font, color);
+        let Pos { h_pos, v_pos } = style.anchor();
+        let anchor = Align2([
+            match h_pos {
+                HPos::Left => Align::LEFT,
+                HPos::Right => Align::RIGHT,
+                HPos::Center => Align::Center,
+            },
+            match v_pos {
+                VPos::Top => Align::TOP,
+                VPos::Center => Align::Center,
+                VPos::Bottom => Align::BOTTOM,
+            },
+        ]);
+
+        painter.text(pos.into(), anchor, text, font, color);
 
         Ok(())
     }
