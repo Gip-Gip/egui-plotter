@@ -1,12 +1,13 @@
 //! Plotter backend for egui
 
 use std::error::Error as ErrorTrait;
+use std::f32::consts::FRAC_PI_2;
 use std::fmt::{Display, Formatter, Result as FmtResult};
 use std::ops::{Add, AddAssign, MulAssign, Sub, SubAssign};
 
 use egui::{
-    epaint::PathShape, Align, Align2, Color32, FontFamily as EguiFontFamily, FontId, Pos2, Rect,
-    Stroke, Ui,
+    epaint::{PathShape, TextShape},
+    Align, Align2, Color32, FontFamily as EguiFontFamily, FontId, Pos2, Rect, Stroke, Ui,
 };
 use plotters_backend::{
     text_anchor::{HPos, Pos, VPos},
@@ -321,8 +322,11 @@ impl<'a> DrawingBackend for EguiBackend<'a> {
 
         let color: Color32 = EguiBackendColor::from(style.color()).into();
 
+        let rotations = style.transform() as usize;
+        let angle = rotations as f32 * FRAC_PI_2;
+
         let Pos { h_pos, v_pos } = style.anchor();
-        let anchor = Align2([
+        let mut anchor = Align2([
             match h_pos {
                 HPos::Left => Align::LEFT,
                 HPos::Right => Align::RIGHT,
@@ -334,8 +338,30 @@ impl<'a> DrawingBackend for EguiBackend<'a> {
                 VPos::Bottom => Align::BOTTOM,
             },
         ]);
-
-        painter.text(pos.into(), anchor, text, font, color);
+        fn rotate(anchor: &mut Align2) {
+            *anchor = match anchor {
+                &mut Align2::LEFT_TOP => Align2::RIGHT_TOP,
+                &mut Align2::RIGHT_TOP => Align2::RIGHT_BOTTOM,
+                &mut Align2::RIGHT_BOTTOM => Align2::LEFT_BOTTOM,
+                &mut Align2::LEFT_BOTTOM => Align2::LEFT_TOP,
+                &mut Align2::LEFT_CENTER => Align2::CENTER_TOP,
+                &mut Align2::CENTER_TOP => Align2::RIGHT_CENTER,
+                &mut Align2::RIGHT_CENTER => Align2::CENTER_BOTTOM,
+                &mut Align2::CENTER_BOTTOM => Align2::LEFT_CENTER,
+                &mut Align2::CENTER_CENTER => Align2::CENTER_CENTER,
+            }
+        }
+        for _ in 0..rotations {
+            rotate(&mut anchor)
+        }
+        let galley = painter.layout_no_wrap(text.to_string(), font, color);
+        let rect = anchor.anchor_rect(Rect::from_min_size(pos.into(), galley.size()));
+        if !galley.is_empty() {
+            painter.add(TextShape {
+                angle,
+                ..TextShape::new(rect.min, galley)
+            });
+        }
 
         Ok(())
     }
