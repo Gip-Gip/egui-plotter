@@ -132,8 +132,6 @@ impl XyTimeData {
             ranges.push((range_x, range_y));
         }
 
-        let y_unit: String = y_unit.split("").map(|c| format!("{}\n", c)).collect();
-
         // Turn all the vecs and strings into arcs since they are more or less read-only at
         // this point
 
