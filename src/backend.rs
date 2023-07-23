@@ -326,6 +326,8 @@ impl<'a> DrawingBackend for EguiBackend<'a> {
         let angle = rotations as f32 * FRAC_PI_2;
 
         let Pos { h_pos, v_pos } = style.anchor();
+
+        // !TODO! Find a slightly more eligant rotation function.
         let mut anchor = Align2([
             match h_pos {
                 HPos::Left => Align::LEFT,
