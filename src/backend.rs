@@ -7,7 +7,7 @@ use std::ops::{Add, AddAssign, MulAssign, Sub, SubAssign};
 
 use egui::{
     epaint::{PathShape, TextShape},
-    Align, Align2, Color32, FontFamily as EguiFontFamily, FontId, Pos2, Rect, Stroke, Ui,
+    Align, Align2, Color32, FontFamily as EguiFontFamily, FontId, Pos2, Rect, Rounding, Stroke, Ui,
 };
 use plotters_backend::{
     text_anchor::{HPos, Pos, VPos},
@@ -295,6 +295,121 @@ impl<'a> DrawingBackend for EguiBackend<'a> {
         Ok(())
     }
 
+    fn draw_rect<S: BackendStyle>(
+        &mut self,
+        upper_left: BackendCoord,
+        bottom_right: BackendCoord,
+        style: &S,
+        fill: bool,
+    ) -> Result<(), DrawingErrorKind<Self::ErrorType>> {
+        let bounds = self.ui.max_rect();
+        let painter = self.ui.painter().with_clip_rect(bounds);
+
+        let p0 = self.point_transform(EguiBackendCoord::from(upper_left), bounds);
+        let p1 = self.point_transform(EguiBackendCoord::from(bottom_right), bounds);
+        let color: Color32 = EguiBackendColor::from(style.color()).into();
+        if fill {
+            painter.rect_filled(
+                egui::Rect {
+                    min: p0.into(),
+                    max: p1.into(),
+                },
+                Rounding::default(),
+                color,
+            );
+        } else {
+            let stroke = Stroke::new(style.stroke_width() as f32, color);
+            painter.rect(
+                egui::Rect {
+                    min: p0.into(),
+                    max: p1.into(),
+                },
+                Rounding::default(),
+                Color32::TRANSPARENT,
+                stroke,
+            );
+        }
+
+        Ok(())
+    }
+
+    fn draw_path<S: BackendStyle, I: IntoIterator<Item = BackendCoord>>(
+        &mut self,
+        path: I,
+        style: &S,
+    ) -> Result<(), DrawingErrorKind<Self::ErrorType>> {
+        let bounds = self.ui.max_rect();
+        let painter = self.ui.painter().with_clip_rect(bounds);
+
+        let points: Vec<Pos2> = path
+            .into_iter()
+            .map(|point| {
+                let point = self.point_transform(EguiBackendCoord::from(point), bounds);
+
+                point.into()
+            })
+            .collect();
+
+        let color: Color32 = EguiBackendColor::from(style.color()).into();
+
+        let stroke = Stroke::new(style.stroke_width() as f32, color);
+
+        let shape = PathShape::line(points, stroke);
+
+        painter.add(shape);
+        Ok(())
+    }
+
+    fn draw_circle<S: BackendStyle>(
+        &mut self,
+        center: BackendCoord,
+        radius: u32,
+        style: &S,
+        fill: bool,
+    ) -> Result<(), DrawingErrorKind<Self::ErrorType>> {
+        let bounds = self.ui.max_rect();
+        let painter = self.ui.painter().with_clip_rect(bounds);
+
+        let center = self.point_transform(EguiBackendCoord::from(center), bounds);
+        let color: Color32 = EguiBackendColor::from(style.color()).into();
+        if fill {
+            painter.circle_filled(center.into(), radius as _, color);
+        } else {
+            let stroke = Stroke::new(style.stroke_width() as f32, color);
+            painter.circle(center.into(), radius as _, Color32::TRANSPARENT, stroke);
+        }
+
+        Ok(())
+    }
+
+    fn fill_polygon<S: BackendStyle, I: IntoIterator<Item = BackendCoord>>(
+        &mut self,
+        vert: I,
+        style: &S,
+    ) -> Result<(), DrawingErrorKind<Self::ErrorType>> {
+        let bounds = self.ui.max_rect();
+        let painter = self.ui.painter().with_clip_rect(bounds);
+
+        let points: Vec<Pos2> = vert
+            .into_iter()
+            .map(|point| {
+                let point = self.point_transform(EguiBackendCoord::from(point), bounds);
+
+                point.into()
+            })
+            .collect();
+
+        let color: Color32 = EguiBackendColor::from(style.color()).into();
+
+        let stroke = Stroke::NONE;
+
+        let shape = PathShape::convex_polygon(points, color, stroke);
+
+        painter.add(shape);
+
+        Ok(())
+    }
+
     fn draw_text<TStyle: BackendTextStyle>(
         &mut self,
         text: &str,
@@ -364,61 +479,6 @@ impl<'a> DrawingBackend for EguiBackend<'a> {
                 ..TextShape::new(rect.min, galley)
             });
         }
-
-        Ok(())
-    }
-
-    fn draw_path<S: BackendStyle, I: IntoIterator<Item = BackendCoord>>(
-        &mut self,
-        path: I,
-        style: &S,
-    ) -> Result<(), DrawingErrorKind<Self::ErrorType>> {
-        let bounds = self.ui.max_rect();
-        let painter = self.ui.painter().with_clip_rect(bounds);
-
-        let points: Vec<Pos2> = path
-            .into_iter()
-            .map(|point| {
-                let point = self.point_transform(EguiBackendCoord::from(point), bounds);
-
-                point.into()
-            })
-            .collect();
-
-        let color: Color32 = EguiBackendColor::from(style.color()).into();
-
-        let stroke = Stroke::new(style.stroke_width() as f32, color);
-
-        let shape = PathShape::line(points, stroke);
-
-        painter.add(shape);
-        Ok(())
-    }
-
-    fn fill_polygon<S: BackendStyle, I: IntoIterator<Item = BackendCoord>>(
-        &mut self,
-        vert: I,
-        style: &S,
-    ) -> Result<(), DrawingErrorKind<Self::ErrorType>> {
-        let bounds = self.ui.max_rect();
-        let painter = self.ui.painter().with_clip_rect(bounds);
-
-        let points: Vec<Pos2> = vert
-            .into_iter()
-            .map(|point| {
-                let point = self.point_transform(EguiBackendCoord::from(point), bounds);
-
-                point.into()
-            })
-            .collect();
-
-        let color: Color32 = EguiBackendColor::from(style.color()).into();
-
-        let stroke = Stroke::NONE;
-
-        let shape = PathShape::convex_polygon(points, color, stroke);
-
-        painter.add(shape);
 
         Ok(())
     }
