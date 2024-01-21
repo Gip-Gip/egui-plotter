@@ -17,16 +17,16 @@ exclude = [
 timechart = ["dep:instant"]
 
 [dependencies]
-egui = "0.22" 
+egui = "0.25" 
 plotters-backend = "0.3"
 plotters = "0.3"
 # if you are using egui then chances are you're using trunk which uses wasm bindgen
 instant = { version = "0.1", features = ["wasm-bindgen"], optional = true }
 
 [dev-dependencies]
-eframe = "0.22.0"
+eframe = "0.25.0"
 # Hacky way to enable features during testing
-egui-plotter = { path = ".", version = "0.3.0", features = ["timechart"]}
+egui-plotter = { path = ".", version = "0.3", features = ["timechart"]}
 
 [package.metadata.docs.rs]
 features = ["timechart"]
