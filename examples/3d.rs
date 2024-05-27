@@ -63,7 +63,7 @@ impl eframe::App for ThreeD {
                     false => (self.chart_pitch_vel, self.chart_yaw_vel),
                 };
 
-                let scale_delta = input.scroll_delta.y * SCROLL_SCALE;
+                let scale_delta = input.smooth_scroll_delta.y * SCROLL_SCALE;
 
                 (pitch_delta, yaw_delta, scale_delta)
             });
