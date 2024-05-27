@@ -29,14 +29,8 @@ struct SprialExample {
 
 impl SprialExample {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        // Disable feathering as it causes artifacts
+        // Enable dark mode
         let context = &cc.egui_ctx;
-
-        context.tessellation_options_mut(|tess_options| {
-            tess_options.feathering = false;
-        });
-
-        // Also enable light mode
         context.set_visuals(Visuals::dark());
 
         let mut points: Vec<(f32, f32, f32)> = Vec::with_capacity(SPIRAL_LEN * SPIRAL_SUB);

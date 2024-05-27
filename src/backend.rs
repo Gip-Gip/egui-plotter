@@ -6,7 +6,8 @@ use std::fmt::{Display, Formatter, Result as FmtResult};
 use std::ops::{Add, AddAssign, MulAssign, Sub, SubAssign};
 
 use egui::{
-    epaint::{PathShape, TextShape},
+    Mesh,
+    epaint::{PathShape, TextShape, Vertex},
     Align, Align2, Color32, FontFamily as EguiFontFamily, FontId, Pos2, Rect, Stroke, Ui,
 };
 use plotters_backend::{
@@ -403,22 +404,38 @@ impl<'a> DrawingBackend for EguiBackend<'a> {
         let bounds = self.ui.max_rect();
         let painter = self.ui.painter().with_clip_rect(bounds);
 
-        let points: Vec<Pos2> = vert
+        let vertices: Vec<Vertex> = vert
             .into_iter()
-            .map(|point| {
-                let point = self.point_transform(EguiBackendCoord::from(point), bounds);
-
-                point.into()
+            .map(|coord| Vertex {
+                pos: self
+                    .point_transform(EguiBackendCoord::from(coord), bounds)
+                    .into(),
+                uv: Default::default(),
+                color: EguiBackendColor::from(style.color()).into(),
             })
             .collect();
 
-        let color: Color32 = EguiBackendColor::from(style.color()).into();
+        let flat_vertices: Vec<f32> = vertices
+            .iter()
+            .flat_map(|v| vec![v.pos.x, v.pos.y])
+            .collect();
 
-        let stroke = Stroke::NONE;
+        let mut mesh = Mesh::default();
+        mesh.vertices.extend(vertices);
 
-        let shape = PathShape::convex_polygon(points, color, stroke);
+        earcutr::earcut(&flat_vertices, &Vec::new(), 2)
+            .map_err(|e| {
+                DrawingErrorKind::DrawingError(std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    format!("earcutr error: {}", e),
+                ))
+            })?
+            .chunks_exact(3)
+            .for_each(|triangle| {
+                mesh.add_triangle(triangle[0] as u32, triangle[1] as u32, triangle[2] as u32);
+            });
 
-        painter.add(shape);
+        painter.add(mesh);
 
         Ok(())
     }

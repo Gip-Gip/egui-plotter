@@ -17,11 +17,6 @@
 //! egui-plotter = "0.3.0"
 //! ```
 //!
-//! **It is also heavily recommended you disable feathering in your egui context,
-//! as not only does it slow things down but it causes artifacts with certain plots.**
-//!
-//! See line 24 example below to see how to disable feathering.
-//!
 //! ### Features
 //!
 //!  * `timechart` - Includes all the pre-made animatable charts like XyTimeData and TimeData.
@@ -52,14 +47,8 @@
 //!
 //! impl Simple {
 //!     fn new(cc: &eframe::CreationContext<'_>) -> Self {
-//!         // Disable feathering as it causes artifacts
+//!         // Enable light mode
 //!         let context = &cc.egui_ctx;
-//!
-//!         context.tessellation_options_mut(|tess_options| {
-//!             tess_options.feathering = false;
-//!         });
-//!
-//!         // Also enable light mode
 //!         context.set_visuals(Visuals::light());
 //!
 //!         Self
@@ -131,14 +120,8 @@
 //!
 //! impl ParaChart {
 //!     fn new(cc: &eframe::CreationContext<'_>) -> Self {
-//!         // Disable feathering as it causes artifacts
+//!         // Enable light mode
 //!         let context = &cc.egui_ctx;
-//!
-//!         context.tessellation_options_mut(|tess_options| {
-//!             tess_options.feathering = false;
-//!         });
-//!
-//!         // Also enable light mode
 //!         context.set_visuals(Visuals::light());
 //!
 //!         // We use data to adjust the range of the chart. This can be useful for
