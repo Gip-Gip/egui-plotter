@@ -24,14 +24,8 @@ struct Chart3d {
 
 impl Chart3d {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        // Disable feathring as it causes artifacts
+        // Enable light mode
         let context = &cc.egui_ctx;
-
-        context.tessellation_options_mut(|tess_options| {
-            tess_options.feathering = false;
-        });
-
-        // Also enable light mode
         context.set_visuals(Visuals::light());
 
         // Create a new 3d chart with all mouse controls enabled and the chart slightly angled

@@ -25,14 +25,8 @@ struct TimeDataExample {
 
 impl TimeDataExample {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        // Disable feathering as it causes artifacts
+        // Enable light mode
         let context = &cc.egui_ctx;
-
-        context.tessellation_options_mut(|tess_options| {
-            tess_options.feathering = false;
-        });
-
-        // Also enable light mode
         context.set_visuals(Visuals::light());
 
         let mut points: Vec<(f32, f32)> = Vec::with_capacity(DISTANCE_M.len());

@@ -354,7 +354,7 @@ impl<Data> Chart<Data> {
 
             // Adjust zoom if zoom is enabled
             if self.mouse.zoom {
-                let scale_delta = input.scroll_delta.y * self.mouse.zoom_scale;
+                let scale_delta = input.smooth_scroll_delta.y * self.mouse.zoom_scale;
 
                 // !TODO! make scaling exponential
                 transform.scale = (transform.scale + scale_delta as f64).abs();
