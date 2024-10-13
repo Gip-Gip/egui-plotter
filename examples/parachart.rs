@@ -12,7 +12,7 @@ fn main() {
     eframe::run_native(
         "ParaChart Example",
         native_options,
-        Box::new(|cc| Box::new(ParaChart::new(cc))),
+        Box::new(|cc| Ok(Box::new(ParaChart::new(cc)))),
     )
     .unwrap();
 }

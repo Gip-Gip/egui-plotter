@@ -13,7 +13,7 @@ fn main() {
     eframe::run_native(
         "3d Chart Example",
         native_options,
-        Box::new(|cc| Box::new(Chart3d::new(cc))),
+        Box::new(|cc| Ok(Box::new(Chart3d::new(cc)))),
     )
     .unwrap();
 }

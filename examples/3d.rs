@@ -15,7 +15,7 @@ fn main() {
     eframe::run_native(
         "3d Example",
         native_options,
-        Box::new(|cc| Box::new(ThreeD::new(cc))),
+        Box::new(|cc| Ok(Box::new(ThreeD::new(cc)))),
     )
     .unwrap();
 }

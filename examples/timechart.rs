@@ -14,7 +14,7 @@ fn main() {
     eframe::run_native(
         "TimeData Example",
         native_options,
-        Box::new(|cc| Box::new(TimeDataExample::new(cc))),
+        Box::new(|cc| Ok(Box::new(TimeDataExample::new(cc)))),
     )
     .unwrap();
 }
