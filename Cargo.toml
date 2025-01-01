@@ -17,7 +17,7 @@ exclude = [
 timechart = ["dep:instant"]
 
 [dependencies]
-egui = "0.25" 
+egui = "0.30" 
 plotters-backend = "0.3"
 plotters = "0.3"
 # if you are using egui then chances are you're using trunk which uses wasm bindgen
