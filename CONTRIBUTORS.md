@@ -2,6 +2,7 @@
 ## *this project would not be possible without these people!*
 
  * [bananaturtlesandwich](https://github.com/bananaturtlesandwich)
+ * [MikMikus](https://github.com/MikMikus)
  * [Charles Thompson, aka. Gip-Gip](https://github.com/Gip-Gip)
 
 #### List is in alphabetical order.

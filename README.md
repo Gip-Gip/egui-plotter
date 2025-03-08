@@ -2,7 +2,6 @@
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE.txt)
 [![Crates.io](https://img.shields.io/crates/v/egui-plotter)](https://crates.io/crates/egui-plotter)
 [![Documentation](https://docs.rs/egui-plotter/badge.svg)](https://docs.rs/egui-plotter)
-[![APE](https://img.shields.io/badge/-APE-%2359118e)](https://openapeshop.org/)
 ## *simple to use utilties for integrating plotter into egui*
 
 [![3d Graph Live Demo](https://github.com/Gip-Gip/egui-plotter/blob/91a86d3dfcd8f4f1207284030edcb637b2edc973/images/3d.gif?raw=true)](https://github.com/Gip-Gip/egui-plotter/blob/main/examples/3d.rs)
