@@ -23,7 +23,7 @@ fn main() {
 struct ThreeD {
     chart_pitch: f32,
     chart_yaw: f32,
-    chart_scale: f32,
+    chart_zoom: f32,
     chart_pitch_vel: f32,
     chart_yaw_vel: f32,
 }
@@ -37,7 +37,7 @@ impl ThreeD {
         Self {
             chart_pitch: 0.3,
             chart_yaw: 0.9,
-            chart_scale: 0.9,
+            chart_zoom: 0.9,
             chart_pitch_vel: 0.0,
             chart_yaw_vel: 0.0,
         }
@@ -48,7 +48,7 @@ impl eframe::App for ThreeD {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         CentralPanel::default().show(ctx, |ui| {
             // First, get mouse data
-            let (pitch_delta, yaw_delta, scale_delta) = ui.input(|input| {
+            let (pitch_delta, yaw_delta, zoom_delta) = ui.input(|input| {
                 let pointer = &input.pointer;
                 let delta = pointer.delta();
 
@@ -57,9 +57,9 @@ impl eframe::App for ThreeD {
                     false => (self.chart_pitch_vel, self.chart_yaw_vel),
                 };
               
-                let scale_delta = input.smooth_scroll_delta.y * SCROLL_SCALE;
+                let zoom_delta = input.smooth_scroll_delta.y * SCROLL_SCALE;
 
-                (pitch_delta, yaw_delta, scale_delta)
+                (pitch_delta, yaw_delta, zoom_delta)
             });
 
             self.chart_pitch_vel = pitch_delta;
@@ -67,7 +67,7 @@ impl eframe::App for ThreeD {
 
             self.chart_pitch += self.chart_pitch_vel;
             self.chart_yaw += self.chart_yaw_vel;
-            self.chart_scale += scale_delta;
+            self.chart_zoom *= f32::exp(zoom_delta);
 
             // Next plot everything
             let root = EguiBackend::new(ui).into_drawing_area();
@@ -85,7 +85,7 @@ impl eframe::App for ThreeD {
             chart.with_projection(|mut pb| {
                 pb.yaw = self.chart_yaw as f64;
                 pb.pitch = self.chart_pitch as f64;
-                pb.scale = self.chart_scale as f64;
+                pb.scale = self.chart_zoom as f64;
                 pb.into_matrix()
             });
 

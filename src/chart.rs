@@ -27,7 +27,7 @@ pub const DEFAULT_SCROLL_SCALE: f32 = 0.001;
 /// chart.with_projection(|mut pb| {
 ///     pb.yaw = transform.yaw;
 ///     pb.pitch = transform.pitch;
-///     pb.scale = 0.7; // Set scale to 0.7 to avoid artifacts caused by plotter's renderer
+///     pb.zoom = 0.7; // Set zoom to 0.7 to avoid artifacts caused by plotter's renderer
 ///     pb.into_matrix()
 /// });
 ///```
@@ -36,6 +36,8 @@ pub struct Transform {
     pub pitch: f64,
     /// Yaw of your graph in 3d
     pub yaw: f64,
+    /// Zoom of your graph in 3d, not to be confused with `scale`.
+    pub zoom: f64,
     /// Scale of your graph. Applied in Chart::draw()
     pub scale: f64,
     /// X offset of your graph. Applied in Chart::draw()
@@ -49,6 +51,7 @@ impl Default for Transform {
         Self {
             pitch: 0.0,
             yaw: 0.0,
+            zoom: 1.0,
             scale: 1.0,
             x: 0,
             y: 0,
@@ -72,6 +75,20 @@ impl MouseButton {
             Self::Middle => pointer.middle_down(),
             Self::Secondary => pointer.secondary_down(),
         }
+    }
+
+    /// See if the mouse is above the given UI widget. This does not require the mouse to be active.
+    pub fn is_on_ui(pointer: &PointerState, ui: &Ui) -> bool {
+        ui.is_enabled() && pointer.latest_pos().map_or(true, |pos| {
+            ui.clip_rect().contains(pos)
+        })
+    }
+
+    /// See if the mouse button is down on the given UI widget.
+    /// 
+    /// This is to prevent the mouse action activates while the mouse is not on the UI.
+    pub fn is_down_on_ui(&self, pointer: &PointerState, ui: &Ui) -> bool {
+        self.is_down(pointer) && Self::is_on_ui(pointer, ui)
     }
 }
 
@@ -300,6 +317,20 @@ impl<Data> Chart<Data> {
     }
 
     #[inline]
+    /// Set the zoom of the chart.
+    pub fn set_zoom(&mut self, zoom: f64) {
+        self.transform.zoom = zoom
+    }
+
+    #[inline]
+    /// Set the zoom of the chart. Consumes self.
+    pub fn zoom(mut self, zoom: f64) -> Self {
+        self.set_zoom(zoom);
+
+        self
+    }
+
+    #[inline]
     /// Set the scale of the chart.
     pub fn set_scale(&mut self, scale: f64) {
         self.transform.scale = scale
@@ -335,7 +366,7 @@ impl<Data> Chart<Data> {
             let delta = pointer.delta();
 
             // Adjust the pitch/yaw if the primary button is pressed and rotation is enabled
-            if self.mouse.rotate && self.mouse.rotate_bind.is_down(pointer) {
+            if self.mouse.rotate && self.mouse.rotate_bind.is_down_on_ui(pointer, ui) {
                 let pitch_delta = delta.y * self.mouse.pitch_scale;
                 let yaw_delta = delta.x * self.mouse.yaw_scale;
 
@@ -344,7 +375,7 @@ impl<Data> Chart<Data> {
             }
 
             // Adjust the x/y if the middle button is down and dragging is enabled
-            if self.mouse.drag && self.mouse.drag_bind.is_down(pointer) {
+            if self.mouse.drag && self.mouse.drag_bind.is_down_on_ui(pointer, ui) {
                 let x_delta = delta.x;
                 let y_delta = delta.y;
 
@@ -353,11 +384,10 @@ impl<Data> Chart<Data> {
             }
 
             // Adjust zoom if zoom is enabled
-            if self.mouse.zoom {
-                let scale_delta = input.smooth_scroll_delta.y * self.mouse.zoom_scale;
+            if self.mouse.zoom && MouseButton::is_on_ui(pointer, ui) {
+                let zoom_delta = input.smooth_scroll_delta.y * self.mouse.zoom_scale;
 
-                // !TODO! make scaling exponential
-                transform.scale = (transform.scale + scale_delta as f64).abs();
+                transform.zoom *= f64::exp(zoom_delta as f64);
             }
         });
 

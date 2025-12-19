@@ -15,18 +15,18 @@ exclude = ["images"]
 timechart = ["dep:instant"]
 
 [dependencies]
-egui = "0.32.1"
+egui = "0.33"
 plotters-backend = "0.3"
 plotters = "0.3"
-earcutr = "0.4.3"
+earcutr = "0.5.0"
 # if you are using egui then chances are you're using trunk which uses wasm bindgen
 instant = { version = "0.1", features = ["wasm-bindgen"], optional = true }
 
 [dev-dependencies]
-eframe = "0.32.1"
+eframe = "0.33"
 # Hacky way to enable features during testing
 egui-plotter = { path = ".", features = ["timechart"] }
-egui_extras = { version = "0.32.1", features = ["all_loaders"] }
+egui_extras = { version = "0.33", features = ["all_loaders"] }
 image = { version = "0.25", features = ["png"] } # Add the types you want support for
 
 [package.metadata.docs.rs]

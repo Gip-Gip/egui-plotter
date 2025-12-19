@@ -5,6 +5,7 @@
 use std::time::Duration;
 
 use eframe::egui::{self, CentralPanel, Visuals};
+use egui::SidePanel;
 use egui_plotter::{Chart, MouseConfig};
 use plotters::prelude::*;
 
@@ -19,7 +20,8 @@ fn main() {
 }
 
 struct Chart3d {
-    chart: Chart<()>,
+    chart1: Chart<()>,
+    chart2: Chart<()>,
 }
 
 impl Chart3d {
@@ -28,15 +30,12 @@ impl Chart3d {
         let context = &cc.egui_ctx;
         context.set_visuals(Visuals::light());
 
-        // Create a new 3d chart with all mouse controls enabled and the chart slightly angled
-        let chart = Chart::new(())
+        // Create the first 3D chart
+        let chart1 = Chart::new(())
             .mouse(MouseConfig::enabled())
             .pitch(0.7)
             .yaw(0.7)
             .builder_cb(Box::new(|area, transform, _d| {
-                // Build a chart like you would in any other plotter chart.
-                // The drawing area and projection transformations are provided
-                // by the callback, but otherwise everything else is the same.
                 let x_axis = (-3.0..3.0).step(0.1);
                 let z_axis = (-3.0..3.0).step(0.1);
 
@@ -75,6 +74,40 @@ impl Chart3d {
                     });
 
                 chart
+                    .configure_series_labels()
+                    .border_style(BLACK)
+                    .draw()
+                    .unwrap();
+            }));
+
+        let chart2 = Chart::new(())
+            .mouse(MouseConfig::enabled())
+            .pitch(0.7)
+            .yaw(0.7)
+            .builder_cb(Box::new(|area, transform, _d| {
+                let x_axis = (-3.0..3.0).step(0.1);
+                let z_axis = (-3.0..3.0).step(0.1);
+
+                let mut chart = ChartBuilder::on(area)
+                    .caption(format!("3D Plot Test"), (FontFamily::SansSerif, 20))
+                    .build_cartesian_3d(x_axis, -3.0..3.0, z_axis)
+                    .unwrap();
+
+                chart.with_projection(|mut pb| {
+                    pb.yaw = transform.yaw;
+                    pb.pitch = transform.pitch;
+                    pb.scale = transform.zoom;
+                    pb.into_matrix()
+                });
+
+                chart
+                    .configure_axes()
+                    .light_grid_style(BLACK.mix(0.15))
+                    .max_light_lines(3)
+                    .draw()
+                    .unwrap();
+
+                chart
                     .draw_series(LineSeries::new(
                         (-100..100)
                             .map(|y| y as f64 / 40.0)
@@ -92,14 +125,18 @@ impl Chart3d {
                     .unwrap();
             }));
 
-        Self { chart }
+        Self { chart1, chart2 }
     }
 }
 
 impl eframe::App for Chart3d {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        SidePanel::right("chart 2").resizable(true).show(ctx, |ui| {
+            ui.separator();
+            self.chart2.draw(ui);
+        });
         CentralPanel::default().show(ctx, |ui| {
-            self.chart.draw(ui);
+            self.chart1.draw(ui);
         });
 
         // Limit framerate to 100fps
