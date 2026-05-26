@@ -39,11 +39,11 @@ impl SimpleBGImage {
 }
 
 impl eframe::App for SimpleBGImage {
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+    fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
 
         if self.bg_image_id.is_none() {
             // Sizehint doesn't affect bitmap textures(png, jpeg, gif, etc.)
-            let bg_image_result = ctx.try_load_texture("file://images/bg_test.png", TextureOptions::NEAREST, SizeHint::Width(4000));
+            let bg_image_result = ui.ctx().try_load_texture("file://images/bg_test.png", TextureOptions::NEAREST, SizeHint::Width(4000));
 
 
             if let Some(id) = bg_image_result.unwrap().texture_id() {
@@ -52,7 +52,7 @@ impl eframe::App for SimpleBGImage {
 
         }
 
-        CentralPanel::default().show(ctx, |ui| {
+        CentralPanel::default().show_inside(ui, |ui| {
             let root = match self.bg_image_id {
                 Some(bg_image_id) => EguiBackend::new(ui).bg_image(bg_image_id, BgImageSize::Fit),
                 None => EguiBackend::new(ui),

@@ -97,8 +97,9 @@ impl Chart3d {
 }
 
 impl eframe::App for Chart3d {
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        CentralPanel::default().show(ctx, |ui| {
+    fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        let ctx = ui.ctx().clone();
+        CentralPanel::default().show_inside(ui, |ui| {
             self.chart.draw(ui);
         });
 

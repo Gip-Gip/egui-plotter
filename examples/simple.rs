@@ -29,8 +29,8 @@ impl Simple {
 }
 
 impl eframe::App for Simple {
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        CentralPanel::default().show(ctx, |ui| {
+    fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        CentralPanel::default().show_inside(ui, |ui| {
             let plotter_canvas = PlotterCanvas::with_cb(|ui| {
                 let root = EguiBackend::new(ui).into_drawing_area();
                 root.fill(&WHITE).unwrap();

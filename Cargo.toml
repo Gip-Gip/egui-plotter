@@ -23,10 +23,10 @@ earcutr = "0.4.3"
 instant = { version = "0.1", features = ["wasm-bindgen"], optional = true }
 
 [dev-dependencies]
-eframe = "0.32.1"
+eframe = "0.34"
 # Hacky way to enable features during testing
 egui-plotter = { path = ".", features = ["timechart"] }
-egui_extras = { version = "0.32.1", features = ["all_loaders"] }
+egui_extras = { version = "0.34", features = ["all_loaders"] }
 image = { version = "0.25", features = ["png"] } # Add the types you want support for
 
 [package.metadata.docs.rs]

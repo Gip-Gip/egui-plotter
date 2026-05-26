@@ -73,8 +73,8 @@ impl ParaChart {
 }
 
 impl eframe::App for ParaChart {
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        CentralPanel::default().show(ctx, |ui| {
+    fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        CentralPanel::default().show_inside(ui, |ui| {
             // Press 1 for the range -1..1, 2 for -2..2, 3 for -3..3
             ui.input(|input| {
                 if input.key_down(Key::Num1) {
