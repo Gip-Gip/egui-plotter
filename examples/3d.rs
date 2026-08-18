@@ -45,8 +45,9 @@ impl ThreeD {
 }
 
 impl eframe::App for ThreeD {
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        CentralPanel::default().show(ctx, |ui| {
+    fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        let ctx = ui.ctx().clone();
+        CentralPanel::default().show_inside(ui, |ui| {
             // First, get mouse data
             let (pitch_delta, yaw_delta, scale_delta) = ui.input(|input| {
                 let pointer = &input.pointer;

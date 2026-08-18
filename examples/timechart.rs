@@ -42,8 +42,9 @@ impl TimeDataExample {
 }
 
 impl eframe::App for TimeDataExample {
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        TopBottomPanel::bottom("playmenu").show(ctx, |ui| {
+    fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        let ctx = ui.ctx().clone();
+        TopBottomPanel::bottom("playmenu").show_inside(ui, |ui| {
             ui.horizontal(|ui| {
                 match self.timechart.is_playing() {
                     true => {
@@ -82,7 +83,7 @@ impl eframe::App for TimeDataExample {
             })
         });
 
-        CentralPanel::default().show(ctx, |ui| {
+        CentralPanel::default().show_inside(ui, |ui| {
             self.timechart.draw(ui);
         });
 
